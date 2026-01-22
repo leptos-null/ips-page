@@ -89,6 +89,12 @@ class StructuredIPSParser {
         // Binary Images
         container.appendChild(this.formatBinaryImages());
 
+        // External Modification Summary
+        const extModsSection = this.formatExtMods();
+        if (extModsSection) {
+            container.appendChild(extModsSection);
+        }
+
         // VM Summary
         if (this.report.vmSummary) {
             container.appendChild(this.formatVMSummary());
@@ -99,6 +105,7 @@ class StructuredIPSParser {
 
     formatProcessInfo() {
         const b = this.report.bundleInfo || {};
+        const build = this.report.buildInfo || {};
         const os = this.report.osVersion || {};
 
         const section = this.createDiv('crash-section');
@@ -128,6 +135,12 @@ class StructuredIPSParser {
         addRow('Path', this.report.procPath || 'Unknown');
         addRow('Identifier', b.CFBundleIdentifier || 'Unknown');
         addRow('Version', `${b.CFBundleShortVersionString || '?'} (${b.CFBundleVersion || '?'})`);
+
+        // Build Info
+        if (build.ProjectName && build.SourceVersion && build.BuildVersion) {
+            addRow('Build Info', `${build.ProjectName}-${build.SourceVersion}~${build.BuildVersion}`);
+        }
+
         addRow('Code Type', this.report.cpuType || 'Unknown');
 
         if (this.report.procRole) {
@@ -142,6 +155,10 @@ class StructuredIPSParser {
             const coalValue = document.createDocumentFragment();
             coalValue.append(this.report.coalitionName, ' [', this.createNumber(this.report.coalitionID || 0), ']');
             addRow('Coalition', coalValue);
+        }
+
+        if (this.report.userID !== undefined) {
+            addRow('User ID', String(this.report.userID));
         }
 
         addRow('Date/Time', this.report.captureTime || 'Unknown');
@@ -160,6 +177,10 @@ class StructuredIPSParser {
             addRow('Release Type', os.releaseType);
         }
 
+        if (this.report.crashReporterKey) {
+            addRow('Crash Reporter Key', this.report.crashReporterKey);
+        }
+
         if (this.report.incident) {
             addRow('Incident ID', this.report.incident);
         }
@@ -168,6 +189,10 @@ class StructuredIPSParser {
             const uptimeValue = document.createDocumentFragment();
             uptimeValue.append(this.createNumber(this.report.uptime), ' seconds');
             addRow('Uptime', uptimeValue);
+        }
+
+        if (this.report.sip !== undefined) {
+            addRow('System Integrity Protection', this.report.sip);
         }
 
         details.appendChild(grid);
@@ -195,7 +220,11 @@ class StructuredIPSParser {
         }
         exceptionInfo.appendChild(exType);
 
-        if (ex.codes) {
+        if (ex.subtype !== undefined) {
+            exceptionInfo.appendChild(this.createDiv('exception-detail', `Subtype: ${ex.subtype}`));
+        }
+
+        if (ex.codes !== undefined) {
             exceptionInfo.appendChild(this.createDiv('exception-detail', `Codes: ${ex.codes}`));
         }
 
@@ -226,6 +255,14 @@ class StructuredIPSParser {
                 procDetail.appendChild(procFrag);
                 exceptionInfo.appendChild(procDetail);
             }
+        }
+
+        if (this.report.vmRegionInfo) {
+            const vmDetail = this.createDiv('exception-detail');
+            vmDetail.style.marginTop = '10px';
+            vmDetail.style.whiteSpace = 'pre-wrap';
+            vmDetail.textContent = `VM Region Info: ${this.report.vmRegionInfo}`;
+            exceptionInfo.appendChild(vmDetail);
         }
 
         if (this.report.faultingThread !== undefined) {
@@ -336,6 +373,9 @@ class StructuredIPSParser {
             if (thread.name) {
                 summaryFrag.append(' - ', thread.name);
             }
+            if (thread.queue) {
+                summaryFrag.append(' (', thread.queue, ')');
+            }
             if (isCrashed) {
                 summaryFrag.append(' ⚠️ CRASHED');
             }
@@ -398,25 +438,53 @@ class StructuredIPSParser {
         const header = this.createElement('h4');
         header.style.marginBottom = '10px';
         header.style.color = '#555';
-        header.textContent = 'Register State';
-        container.appendChild(header);
-
-        const registersGrid = this.createDiv('registers');
 
         let registers = [];
 
-        if (state.x) {
-            for (let i = 0; i < state.x.length; i++) {
-                registers.push({ name: 'x' + i, object: state.x[i] });
-            }
+        switch (state.flavor) {
+            case 'ARM_THREAD_STATE64':
+                header.textContent = 'ARM Thread State (64-bit)';
+
+                if (state.x) {
+                    for (let i = 0; i < state.x.length; i++) {
+                        registers.push({ name: 'x' + i, object: state.x[i] });
+                    }
+                }
+                const namedRegs = [
+                    'fp', 'lr', 'sp', 'pc', 'cpsr',
+                    'far', 'esr'
+                ];
+                namedRegs.forEach(regName => {
+                    if (state[regName]) {
+                        registers.push({ name: regName, object: state[regName] });
+                    }
+                });
+                break;
+
+            case 'x86_THREAD_STATE':
+                header.textContent = 'X86 Thread State (64-bit)';
+
+                const x86Regs = [
+                    'rax', 'rbx', 'rcx', 'rdx', 'rdi', 'rsi', 'rbp', 'rsp',
+                    'r8', 'r9', 'r10', 'r11', 'r12', 'r13', 'r14', 'r15',
+                    'rip', 'rflags', 'cr2'
+                ];
+
+                x86Regs.forEach(regName => {
+                    if (state[regName]) {
+                        const displayName = regName === 'rflags' ? 'rfl' : regName;
+                        registers.push({ name: displayName, object: state[regName] });
+                    }
+                });
+                break;
+
+            default:
+                header.textContent = 'Register State';
         }
-        if (state.fp) registers.push({ name: 'fp', object: state.fp });
-        if (state.lr) registers.push({ name: 'lr', object: state.lr });
-        if (state.sp) registers.push({ name: 'sp', object: state.sp });
-        if (state.pc) registers.push({ name: 'pc', object: state.pc });
-        if (state.cpsr) registers.push({ name: 'cpsr', object: state.cpsr });
-        if (state.far) registers.push({ name: 'far', object: state.far });
-        if (state.esr) registers.push({ name: 'esr', object: state.esr });
+
+        container.appendChild(header);
+
+        const registersGrid = this.createDiv('registers');
 
         registers.forEach(reg => {
             const value = reg.object.value || 0;
@@ -476,6 +544,82 @@ class StructuredIPSParser {
         });
 
         details.appendChild(container);
+        section.appendChild(details);
+        return section;
+    }
+
+    formatExtMods() {
+        const extMods = this.report.extMods;
+        if (!extMods) return null;
+
+        const section = this.createDiv('crash-section');
+        const details = this.createElement('details');
+
+        const summary = this.createElement('summary', null, 'External Modification Summary');
+        details.appendChild(summary);
+
+        const grid = this.createDiv('info-grid');
+
+        const addRow = (label, value) => {
+            grid.appendChild(this.createDiv('info-label', label + ':'));
+            const valueDiv = this.createDiv('info-value');
+            if (typeof value === 'string') {
+                valueDiv.textContent = value;
+            } else {
+                valueDiv.appendChild(value);
+            }
+            grid.appendChild(valueDiv);
+        };
+
+        // Calls made by other processes targeting this process
+        if (extMods.targeted) {
+            const targetedFrag = document.createDocumentFragment();
+            targetedFrag.appendChild(this.createDiv(null, 'Calls made by other processes targeting this process:'));
+            if (extMods.targeted.task_for_pid !== undefined) {
+                targetedFrag.appendChild(this.createDiv(null, `  task_for_pid: ${extMods.targeted.task_for_pid}`));
+            }
+            if (extMods.targeted.thread_create !== undefined) {
+                targetedFrag.appendChild(this.createDiv(null, `  thread_create: ${extMods.targeted.thread_create}`));
+            }
+            if (extMods.targeted.thread_set_state !== undefined) {
+                targetedFrag.appendChild(this.createDiv(null, `  thread_set_state: ${extMods.targeted.thread_set_state}`));
+            }
+            addRow('Targeted', targetedFrag);
+        }
+
+        // Calls made by this process
+        if (extMods.caller) {
+            const callerFrag = document.createDocumentFragment();
+            callerFrag.appendChild(this.createDiv(null, 'Calls made by this process:'));
+            if (extMods.caller.task_for_pid !== undefined) {
+                callerFrag.appendChild(this.createDiv(null, `  task_for_pid: ${extMods.caller.task_for_pid}`));
+            }
+            if (extMods.caller.thread_create !== undefined) {
+                callerFrag.appendChild(this.createDiv(null, `  thread_create: ${extMods.caller.thread_create}`));
+            }
+            if (extMods.caller.thread_set_state !== undefined) {
+                callerFrag.appendChild(this.createDiv(null, `  thread_set_state: ${extMods.caller.thread_set_state}`));
+            }
+            addRow('Caller', callerFrag);
+        }
+
+        // Calls made by all processes on this machine
+        if (extMods.system) {
+            const systemFrag = document.createDocumentFragment();
+            systemFrag.appendChild(this.createDiv(null, 'Calls made by all processes on this machine:'));
+            if (extMods.system.task_for_pid !== undefined) {
+                systemFrag.appendChild(this.createDiv(null, `  task_for_pid: ${extMods.system.task_for_pid}`));
+            }
+            if (extMods.system.thread_create !== undefined) {
+                systemFrag.appendChild(this.createDiv(null, `  thread_create: ${extMods.system.thread_create}`));
+            }
+            if (extMods.system.thread_set_state !== undefined) {
+                systemFrag.appendChild(this.createDiv(null, `  thread_set_state: ${extMods.system.thread_set_state}`));
+            }
+            addRow('System', systemFrag);
+        }
+
+        details.appendChild(grid);
         section.appendChild(details);
         return section;
     }
