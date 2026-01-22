@@ -1,0 +1,378 @@
+/* Structured view specific styles */
+
+.structured-output {
+    max-width: none;
+}
+
+.structured-output .button-group {
+    gap: 10px;
+}
+
+/* Section styles */
+.crash-section {
+    margin-bottom: 20px;
+}
+
+.crash-section > details {
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.crash-section > details > summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #667eea;
+    padding: 5px 0;
+    user-select: none;
+    list-style: none;
+}
+
+.crash-section > details > summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Thread details styling */
+.thread-item details summary {
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+}
+
+.thread-item details summary::-webkit-details-marker {
+    display: none;
+}
+
+.crash-section > details > summary::before {
+    content: '▶';
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.2s;
+}
+
+.crash-section > details[open] > summary::before {
+    transform: rotate(90deg);
+}
+
+.crash-section > details[open] {
+    background: #ffffff;
+}
+
+/* Thread item details */
+.thread-item details summary::before {
+    content: '▶';
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.2s;
+}
+
+.thread-item details[open] summary::before {
+    transform: rotate(90deg);
+}
+
+/* Info grid for key-value pairs */
+.info-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 20px;
+    margin-top: 15px;
+    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-size: 13px;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #555;
+    white-space: nowrap;
+}
+
+.info-value {
+    color: #2d3748;
+    word-break: break-all;
+}
+
+/* Thread list */
+.thread-list {
+    margin-top: 15px;
+}
+
+.thread-item {
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+}
+
+.thread-item.crashed {
+    border-color: #ff6b6b;
+    border-width: 2px;
+    background: #fff5f5;
+}
+
+.thread-header {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.thread-item.crashed .thread-header {
+    color: #c92a2a;
+}
+
+/* Stack frames */
+.stack-frame {
+    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-size: 12px;
+    padding: 4px 0;
+    display: grid;
+    grid-template-columns: 30px 200px auto;
+    gap: 15px;
+    align-items: baseline;
+}
+
+.frame-index {
+    color: #888;
+    text-align: right;
+}
+
+.frame-image {
+    color: #2563eb;
+    font-weight: 500;
+}
+
+.frame-details {
+    color: #2d3748;
+}
+
+/* Syntax highlighting */
+.addr {
+    color: #7c3aed;
+    font-weight: 500;
+}
+
+.symbol {
+    color: #059669;
+}
+
+.offset {
+    color: #888;
+}
+
+.number {
+    color: #d97706;
+}
+
+/* Register display */
+.registers {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 8px;
+    margin-top: 15px;
+    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-size: 13px;
+}
+
+.register {
+    display: flex;
+    gap: 10px;
+}
+
+.register-name {
+    font-weight: 600;
+    color: #555;
+    min-width: 50px;
+}
+
+.register-value {
+    color: #7c3aed;
+    font-weight: 500;
+}
+
+.register-desc {
+    color: #888;
+    font-style: italic;
+}
+
+/* Binary images */
+.binary-image {
+    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-size: 12px;
+    padding: 6px 0;
+    display: grid;
+    grid-template-columns: 160px 250px auto;
+    gap: 15px;
+    align-items: baseline;
+}
+
+.image-range {
+    color: #7c3aed;
+    font-weight: 500;
+}
+
+.image-name {
+    color: #2563eb;
+    font-weight: 500;
+}
+
+.image-details {
+    color: #666;
+}
+
+/* Exception info */
+.exception-info {
+    background: #fff5f5;
+    border-left: 4px solid #ff6b6b;
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 4px;
+}
+
+.exception-type {
+    font-weight: 700;
+    color: #c92a2a;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+
+.exception-detail {
+    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-size: 13px;
+    color: #2d3748;
+    margin: 4px 0;
+}
+
+/* VM Summary */
+.vm-summary {
+    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-size: 12px;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin-top: 15px;
+    white-space: pre-wrap;
+    overflow-x: auto;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    .crash-section > details {
+        background: #2a2a2a;
+        border-color: #404040;
+    }
+
+    .crash-section > details[open] {
+        background: #1e1e1e;
+    }
+
+    .crash-section > details > summary {
+        color: #8b9df7;
+    }
+
+    .info-label {
+        color: #a0a0a0;
+    }
+
+    .info-value {
+        color: #e0e0e0;
+    }
+
+    .thread-item {
+        background: #2a2a2a;
+        border-color: #404040;
+    }
+
+    .thread-item.crashed {
+        background: #2d1a1a;
+        border-color: #ff6b6b;
+    }
+
+    .thread-item.crashed .thread-header {
+        color: #ff8787;
+    }
+
+    .frame-index {
+        color: #808080;
+    }
+
+    .frame-image {
+        color: #6ba3ff;
+    }
+
+    .frame-details {
+        color: #e0e0e0;
+    }
+
+    .addr {
+        color: #a78bfa;
+    }
+
+    .symbol {
+        color: #34d399;
+    }
+
+    .register-name {
+        color: #a0a0a0;
+    }
+
+    .register-value {
+        color: #a78bfa;
+    }
+
+    .image-range {
+        color: #a78bfa;
+    }
+
+    .image-name {
+        color: #6ba3ff;
+    }
+
+    .image-details {
+        color: #999;
+    }
+
+    .exception-info {
+        background: #2d1a1a;
+        border-color: #ff6b6b;
+    }
+
+    .exception-type {
+        color: #ff8787;
+    }
+
+    .exception-detail {
+        color: #e0e0e0;
+    }
+
+    .vm-summary {
+        background: #2a2a2a;
+        color: #e0e0e0;
+    }
+}
+
+@media (max-width: 768px) {
+    .stack-frame {
+        grid-template-columns: 30px 1fr;
+        gap: 10px;
+    }
+
+    .frame-image {
+        grid-column: 2;
+    }
+
+    .frame-details {
+        grid-column: 2;
+    }
+
+    .binary-image {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .registers {
+        grid-template-columns: 1fr;
+    }
+}
