@@ -272,26 +272,72 @@ class IPSParser {
 
         let output = `\nThread ${threadNum} crashed with ARM Thread State (64-bit):\n`;
 
+        let registers = [];
+
         if (state.x) {
-            // Format registers in groups of 4
-            for (let i = 0; i < state.x.length; i += 4) {
-                const line = state.x.slice(i, i + 4).map((reg, idx) => {
-                    const regNum = i + idx;
-                    const value = reg.value || 0;
-                    return `   x${regNum.toString().padStart(2, ' ')}: 0x${value.toString(16).padStart(16, '0')}`;
-                }).join('');
-                output += line + '\n';
+            for (let i = 0; i < state.x.length; i++) {
+                registers.push({
+                    name: 'x' + i,
+                    object: state.x[i]
+                });
             }
         }
+        if (state.fp) {
+            registers.push({
+                name: 'fp',
+                object: state.fp
+            });
+        }
+        if (state.lr) {
+            registers.push({
+                name: 'lr',
+                object: state.lr
+            });
+        }
+        if (state.sp) {
+            registers.push({
+                name: 'sp',
+                object: state.sp
+            });
+        }
+        if (state.pc) {
+            registers.push({
+                name: 'pc',
+                object: state.pc
+            });
+        }
+        if (state.cpsr) {
+            registers.push({
+                name: 'cpsr',
+                object: state.cpsr
+            });
+        }
+        if (state.far) {
+            registers.push({
+                name: 'far',
+                object: state.far
+            });
+        }
+        if (state.esr) {
+            registers.push({
+                name: 'esr',
+                object: state.esr
+            });
+        }
 
-        if (state.fp) output += `   fp: 0x${(state.fp.value || 0).toString(16).padStart(16, '0')}`;
-        if (state.lr) output += `   lr: 0x${(state.lr.value || 0).toString(16).padStart(16, '0')}\n`;
-        if (state.sp) output += `   sp: 0x${(state.sp.value || 0).toString(16).padStart(16, '0')}`;
-        if (state.pc) output += `   pc: 0x${(state.pc.value || 0).toString(16).padStart(16, '0')}`;
-        if (state.cpsr) output += ` cpsr: 0x${(state.cpsr.value || 0).toString(16).padStart(8, '0')}\n`;
-        if (state.far) output += `  far: 0x${(state.far.value || 0).toString(16).padStart(16, '0')}`;
-        if (state.esr) output += `  esr: 0x${(state.esr.value || 0).toString(16).padStart(8, '0')}`;
-        if (state.esr?.description) output += ` (${state.esr.description})`;
+        // Format registers in groups of 4
+        for (let i = 0; i < registers.length; i += 4) {
+            const line = registers.slice(i, i + 4).map((reg) => {
+                const value = reg.object.value || 0;
+                let build = `  ${reg.name.padStart(4, ' ')}: 0x${value.toString(0x10).padStart(16, '0')}`;
+                if (reg.object.description) {
+                    build += ` ${reg.object.description}`;
+                }
+                return build;
+            }).join('');
+            output += line + '\n';
+        }
+
         output += '\n';
 
         return output;
