@@ -353,7 +353,7 @@ class StructuredIPSParser {
             html += `<div class="register-name">${this.escapeHtml(reg.name)}:</div>`;
             html += `<div class="register-value">0x${value.toString(16).padStart(16, '0')}</div>`;
             if (reg.object.description) {
-                html += `<div class="register-desc">(${this.escapeHtml(reg.object.description)})</div>`;
+                html += `<div class="register-desc">${this.escapeHtml(reg.object.description)}</div>`;
             }
             html += '</div>';
         });
