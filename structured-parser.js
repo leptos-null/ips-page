@@ -32,22 +32,32 @@ class StructuredIPSParser {
         }
     }
 
-    formatAddress(addr) {
-        return `<span class="addr">0x${addr.toString(16).padStart(16, '0')}</span>`;
+    // Helper methods for creating DOM elements
+    createElement(tag, className, textContent) {
+        const el = document.createElement(tag);
+        if (className) el.className = className;
+        if (textContent !== undefined) el.textContent = textContent;
+        return el;
     }
 
-    formatNumber(num) {
-        return `<span class="number">${num}</span>`;
+    createSpan(className, textContent) {
+        return this.createElement('span', className, textContent);
     }
 
-    formatSymbol(sym) {
-        return `<span class="symbol">${this.escapeHtml(sym)}</span>`;
+    createDiv(className, textContent) {
+        return this.createElement('div', className, textContent);
     }
 
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+    createAddress(addr) {
+        return this.createSpan('addr', `0x${addr.toString(16).padStart(16, '0')}`);
+    }
+
+    createNumber(num) {
+        return this.createSpan('number', String(num));
+    }
+
+    createSymbol(sym) {
+        return this.createSpan('symbol', sym);
     }
 
     formatReport() {
@@ -55,288 +65,349 @@ class StructuredIPSParser {
             throw new Error('Report not parsed. Call parse() first.');
         }
 
-        let sections = [];
+        const container = document.createDocumentFragment();
 
         // Process Information
-        sections.push(this.formatProcessInfo());
+        container.appendChild(this.formatProcessInfo());
 
         // Exception Information
-        sections.push(this.formatException());
+        container.appendChild(this.formatException());
 
         // Application Specific Information
         if (this.report.asi) {
-            sections.push(this.formatASI());
+            container.appendChild(this.formatASI());
         }
 
         // Last Exception Backtrace
         if (this.report.lastExceptionBacktrace) {
-            sections.push(this.formatLastExceptionBacktrace());
+            container.appendChild(this.formatLastExceptionBacktrace());
         }
 
         // Threads
-        sections.push(this.formatThreads());
+        container.appendChild(this.formatThreads());
 
         // Binary Images
-        sections.push(this.formatBinaryImages());
+        container.appendChild(this.formatBinaryImages());
 
         // VM Summary
         if (this.report.vmSummary) {
-            sections.push(this.formatVMSummary());
+            container.appendChild(this.formatVMSummary());
         }
 
-        return sections.join('\n');
+        return container;
     }
 
     formatProcessInfo() {
         const b = this.report.bundleInfo || {};
         const os = this.report.osVersion || {};
 
-        let html = '<div class="crash-section">';
-        html += '<details open>';
-        html += '<summary>Process Information</summary>';
-        html += '<div class="info-grid">';
+        const section = this.createDiv('crash-section');
+        const details = this.createElement('details');
+        details.open = true;
 
-        html += `<div class="info-label">Process:</div>`;
-        html += `<div class="info-value">${this.escapeHtml(this.report.procName || 'Unknown')} [${this.formatNumber(this.report.pid || 0)}]</div>`;
+        const summary = this.createElement('summary', null, 'Process Information');
+        details.appendChild(summary);
 
-        html += `<div class="info-label">Path:</div>`;
-        html += `<div class="info-value">${this.escapeHtml(this.report.procPath || 'Unknown')}</div>`;
+        const grid = this.createDiv('info-grid');
 
-        html += `<div class="info-label">Identifier:</div>`;
-        html += `<div class="info-value">${this.escapeHtml(b.CFBundleIdentifier || 'Unknown')}</div>`;
+        const addRow = (label, value) => {
+            grid.appendChild(this.createDiv('info-label', label + ':'));
+            const valueDiv = this.createDiv('info-value');
+            if (typeof value === 'string') {
+                valueDiv.textContent = value;
+            } else {
+                valueDiv.appendChild(value);
+            }
+            grid.appendChild(valueDiv);
+        };
 
-        html += `<div class="info-label">Version:</div>`;
-        html += `<div class="info-value">${this.escapeHtml(b.CFBundleShortVersionString || '?')} (${this.escapeHtml(b.CFBundleVersion || '?')})</div>`;
+        const procValue = document.createDocumentFragment();
+        procValue.append(this.report.procName || 'Unknown', ' [', this.createNumber(this.report.pid || 0), ']');
+        addRow('Process', procValue);
 
-        html += `<div class="info-label">Code Type:</div>`;
-        html += `<div class="info-value">${this.escapeHtml(this.report.cpuType || 'Unknown')}</div>`;
+        addRow('Path', this.report.procPath || 'Unknown');
+        addRow('Identifier', b.CFBundleIdentifier || 'Unknown');
+        addRow('Version', `${b.CFBundleShortVersionString || '?'} (${b.CFBundleVersion || '?'})`);
+        addRow('Code Type', this.report.cpuType || 'Unknown');
 
         if (this.report.procRole) {
-            html += `<div class="info-label">Role:</div>`;
-            html += `<div class="info-value">${this.escapeHtml(this.report.procRole)}</div>`;
+            addRow('Role', this.report.procRole);
         }
 
-        html += `<div class="info-label">Parent Process:</div>`;
-        html += `<div class="info-value">${this.escapeHtml(this.report.parentProc || 'Unknown')} [${this.formatNumber(this.report.parentPid || 0)}]</div>`;
+        const parentValue = document.createDocumentFragment();
+        parentValue.append(this.report.parentProc || 'Unknown', ' [', this.createNumber(this.report.parentPid || 0), ']');
+        addRow('Parent Process', parentValue);
 
         if (this.report.coalitionName) {
-            html += `<div class="info-label">Coalition:</div>`;
-            html += `<div class="info-value">${this.escapeHtml(this.report.coalitionName)} [${this.formatNumber(this.report.coalitionID || 0)}]</div>`;
+            const coalValue = document.createDocumentFragment();
+            coalValue.append(this.report.coalitionName, ' [', this.createNumber(this.report.coalitionID || 0), ']');
+            addRow('Coalition', coalValue);
         }
 
-        html += `<div class="info-label">Date/Time:</div>`;
-        html += `<div class="info-value">${this.escapeHtml(this.report.captureTime || 'Unknown')}</div>`;
+        addRow('Date/Time', this.report.captureTime || 'Unknown');
 
         if (this.report.procLaunch) {
-            html += `<div class="info-label">Launch Time:</div>`;
-            html += `<div class="info-value">${this.escapeHtml(this.report.procLaunch)}</div>`;
+            addRow('Launch Time', this.report.procLaunch);
         }
 
         if (this.report.modelCode) {
-            html += `<div class="info-label">Hardware Model:</div>`;
-            html += `<div class="info-value">${this.escapeHtml(this.report.modelCode)}</div>`;
+            addRow('Hardware Model', this.report.modelCode);
         }
 
-        html += `<div class="info-label">OS Version:</div>`;
-        html += `<div class="info-value">${this.escapeHtml(os.train || 'Unknown')} (${this.escapeHtml(os.build || 'Unknown')})</div>`;
+        addRow('OS Version', `${os.train || 'Unknown'} (${os.build || 'Unknown'})`);
 
         if (os.releaseType) {
-            html += `<div class="info-label">Release Type:</div>`;
-            html += `<div class="info-value">${this.escapeHtml(os.releaseType)}</div>`;
+            addRow('Release Type', os.releaseType);
         }
 
         if (this.report.incident) {
-            html += `<div class="info-label">Incident ID:</div>`;
-            html += `<div class="info-value">${this.escapeHtml(this.report.incident)}</div>`;
+            addRow('Incident ID', this.report.incident);
         }
 
         if (this.report.uptime !== undefined) {
-            html += `<div class="info-label">Uptime:</div>`;
-            html += `<div class="info-value">${this.formatNumber(this.report.uptime)} seconds</div>`;
+            const uptimeValue = document.createDocumentFragment();
+            uptimeValue.append(this.createNumber(this.report.uptime), ' seconds');
+            addRow('Uptime', uptimeValue);
         }
 
-        html += '</div></details></div>';
-        return html;
+        details.appendChild(grid);
+        section.appendChild(details);
+        return section;
     }
 
     formatException() {
         const ex = this.report.exception || {};
         const term = this.report.termination;
 
-        let html = '<div class="crash-section">';
-        html += '<details open>';
-        html += '<summary>Exception Information</summary>';
-        html += '<div class="exception-info">';
+        const section = this.createDiv('crash-section');
+        const details = this.createElement('details');
+        details.open = true;
 
-        html += `<div class="exception-type">`;
-        html += this.escapeHtml(ex.type || 'Unknown');
+        const summary = this.createElement('summary', null, 'Exception Information');
+        details.appendChild(summary);
+
+        const exceptionInfo = this.createDiv('exception-info');
+
+        const exType = this.createDiv('exception-type');
+        exType.textContent = ex.type || 'Unknown';
         if (ex.signal) {
-            html += ` (${this.escapeHtml(ex.signal)})`;
+            exType.textContent += ` (${ex.signal})`;
         }
-        html += '</div>';
+        exceptionInfo.appendChild(exType);
 
         if (ex.codes) {
-            html += `<div class="exception-detail">Codes: ${this.escapeHtml(ex.codes)}</div>`;
+            exceptionInfo.appendChild(this.createDiv('exception-detail', `Codes: ${ex.codes}`));
         }
 
         if (ex.message) {
-            html += `<div class="exception-detail">Message: ${this.escapeHtml(ex.message)}</div>`;
+            exceptionInfo.appendChild(this.createDiv('exception-detail', `Message: ${ex.message}`));
         }
 
         if (term) {
-            html += `<div class="exception-detail" style="margin-top: 10px;">`;
-            html += `Termination: Namespace ${this.escapeHtml(term.namespace || 'Unknown')}, Code ${this.formatNumber(term.code || 0)}`;
+            const termDetail = this.createDiv('exception-detail');
+            termDetail.style.marginTop = '10px';
+            const termFrag = document.createDocumentFragment();
+            termFrag.append(
+                'Termination: Namespace ',
+                term.namespace || 'Unknown',
+                ', Code ',
+                this.createNumber(term.code || 0)
+            );
             if (term.indicator) {
-                html += `, ${this.escapeHtml(term.indicator)}`;
+                termFrag.append(', ', term.indicator);
             }
-            html += '</div>';
+            termDetail.appendChild(termFrag);
+            exceptionInfo.appendChild(termDetail);
 
             if (term.byProc) {
-                html += `<div class="exception-detail">Terminating Process: ${this.escapeHtml(term.byProc)} [${this.formatNumber(term.byPid || 0)}]</div>`;
+                const procFrag = document.createDocumentFragment();
+                procFrag.append('Terminating Process: ', term.byProc, ' [', this.createNumber(term.byPid || 0), ']');
+                const procDetail = this.createDiv('exception-detail');
+                procDetail.appendChild(procFrag);
+                exceptionInfo.appendChild(procDetail);
             }
         }
 
         if (this.report.faultingThread !== undefined) {
-            html += `<div class="exception-detail" style="margin-top: 10px;">Faulting Thread: ${this.formatNumber(this.report.faultingThread)}</div>`;
+            const faultDetail = this.createDiv('exception-detail');
+            faultDetail.style.marginTop = '10px';
+            const faultFrag = document.createDocumentFragment();
+            faultFrag.append('Faulting Thread: ', this.createNumber(this.report.faultingThread));
+            faultDetail.appendChild(faultFrag);
+            exceptionInfo.appendChild(faultDetail);
         }
 
-        html += '</div></details></div>';
-        return html;
+        details.appendChild(exceptionInfo);
+        section.appendChild(details);
+        return section;
     }
 
     formatASI() {
-        let html = '<div class="crash-section">';
-        html += '<details open>';
-        html += '<summary>Application Specific Information</summary>';
-        html += '<div class="info-grid">';
+        const section = this.createDiv('crash-section');
+        const details = this.createElement('details');
+        details.open = true;
+
+        const summary = this.createElement('summary', null, 'Application Specific Information');
+        details.appendChild(summary);
+
+        const grid = this.createDiv('info-grid');
 
         for (const [key, value] of Object.entries(this.report.asi)) {
             if (Array.isArray(value)) {
                 value.forEach(v => {
-                    html += `<div class="info-label">${this.escapeHtml(key)}:</div>`;
-                    html += `<div class="info-value">${this.escapeHtml(v)}</div>`;
+                    grid.appendChild(this.createDiv('info-label', key + ':'));
+                    grid.appendChild(this.createDiv('info-value', v));
                 });
             } else {
-                html += `<div class="info-label">${this.escapeHtml(key)}:</div>`;
-                html += `<div class="info-value">${this.escapeHtml(value)}</div>`;
+                grid.appendChild(this.createDiv('info-label', key + ':'));
+                grid.appendChild(this.createDiv('info-value', String(value)));
             }
         }
 
-        html += '</div></details></div>';
-        return html;
+        details.appendChild(grid);
+        section.appendChild(details);
+        return section;
     }
 
     formatLastExceptionBacktrace() {
         const backtrace = this.report.lastExceptionBacktrace;
-        if (!backtrace || backtrace.length === 0) return '';
+        if (!backtrace || backtrace.length === 0) return null;
 
-        let html = '<div class="crash-section">';
-        html += '<details>';
-        html += '<summary>Last Exception Backtrace</summary>';
-        html += '<div style="margin-top: 15px;">';
+        const section = this.createDiv('crash-section');
+        const details = this.createElement('details');
+
+        const summary = this.createElement('summary', null, 'Last Exception Backtrace');
+        details.appendChild(summary);
+
+        const container = this.createDiv();
+        container.style.marginTop = '15px';
 
         backtrace.forEach((frame, index) => {
             const imageInfo = this.report.usedImages[frame.imageIndex];
             const imageName = imageInfo ? imageInfo.name : 'Unknown';
             const address = (imageInfo?.base || 0) + frame.imageOffset;
 
-            html += '<div class="stack-frame">';
-            html += `<div class="frame-index">${index}</div>`;
-            html += `<div class="frame-image">${this.escapeHtml(imageName)}</div>`;
-            html += '<div class="frame-details">';
-            html += this.formatAddress(address);
+            const stackFrame = this.createDiv('stack-frame');
+            stackFrame.appendChild(this.createDiv('frame-index', String(index)));
+            stackFrame.appendChild(this.createDiv('frame-image', imageName));
+
+            const frameDetails = this.createDiv('frame-details');
+            frameDetails.appendChild(this.createAddress(address));
 
             if (frame.symbol) {
-                html += ` ${this.formatSymbol(frame.symbol)}`;
+                frameDetails.append(' ', this.createSymbol(frame.symbol));
                 if (frame.symbolLocation !== undefined) {
-                    html += ` <span class="offset">+ ${this.formatNumber(frame.symbolLocation)}</span>`;
+                    const offset = this.createSpan('offset');
+                    offset.append('+ ', this.createNumber(frame.symbolLocation));
+                    frameDetails.append(' ', offset);
                 }
             }
 
-            html += '</div></div>';
+            stackFrame.appendChild(frameDetails);
+            container.appendChild(stackFrame);
         });
 
-        html += '</div></details></div>';
-        return html;
+        details.appendChild(container);
+        section.appendChild(details);
+        return section;
     }
 
     formatThreads() {
         const threads = this.report.threads || [];
 
-        let html = '<div class="crash-section">';
-        html += '<details open>';
-        html += '<summary>Threads</summary>';
-        html += '<div class="thread-list">';
+        const section = this.createDiv('crash-section');
+        const details = this.createElement('details');
+        details.open = true;
+
+        const summary = this.createElement('summary', null, 'Threads');
+        details.appendChild(summary);
+
+        const threadList = this.createDiv('thread-list');
 
         threads.forEach((thread) => {
             const isCrashed = thread.triggered;
 
-            html += `<div class="thread-item ${isCrashed ? 'crashed' : ''}">`;
-            html += '<details>';
+            const threadItem = this.createDiv(isCrashed ? 'thread-item crashed' : 'thread-item');
+            const threadDetails = this.createElement('details');
 
-            let summary = `Thread ${this.formatNumber(thread.id)}`;
+            const threadSummary = this.createElement('summary', 'thread-header');
+            const summaryFrag = document.createDocumentFragment();
+            summaryFrag.append('Thread ', this.createNumber(thread.id));
             if (thread.name) {
-                summary += ` - ${this.escapeHtml(thread.name)}`;
+                summaryFrag.append(' - ', thread.name);
             }
             if (isCrashed) {
-                summary += ' ⚠️ CRASHED';
+                summaryFrag.append(' ⚠️ CRASHED');
             }
-
-            html += `<summary class="thread-header">${summary}</summary>`;
+            threadSummary.appendChild(summaryFrag);
+            threadDetails.appendChild(threadSummary);
 
             // Stack frames
             if (thread.frames && thread.frames.length > 0) {
-                html += '<div style="margin-top: 10px;">';
+                const framesContainer = this.createDiv();
+                framesContainer.style.marginTop = '10px';
+
                 thread.frames.forEach((frame, index) => {
                     const imageInfo = this.report.usedImages[frame.imageIndex];
                     const imageName = imageInfo ? imageInfo.name : 'Unknown';
                     const address = (imageInfo?.base || 0) + frame.imageOffset;
 
-                    html += '<div class="stack-frame">';
-                    html += `<div class="frame-index">${index}</div>`;
-                    html += `<div class="frame-image">${this.escapeHtml(imageName)}</div>`;
-                    html += '<div class="frame-details">';
-                    html += this.formatAddress(address);
+                    const stackFrame = this.createDiv('stack-frame');
+                    stackFrame.appendChild(this.createDiv('frame-index', String(index)));
+                    stackFrame.appendChild(this.createDiv('frame-image', imageName));
+
+                    const frameDetails = this.createDiv('frame-details');
+                    frameDetails.appendChild(this.createAddress(address));
 
                     if (frame.symbol) {
-                        html += ` ${this.formatSymbol(frame.symbol)}`;
+                        frameDetails.append(' ', this.createSymbol(frame.symbol));
                         if (frame.symbolLocation !== undefined) {
-                            html += ` <span class="offset">+ ${this.formatNumber(frame.symbolLocation)}</span>`;
+                            const offset = this.createSpan('offset');
+                            offset.append('+ ', this.createNumber(frame.symbolLocation));
+                            frameDetails.append(' ', offset);
                         }
                     }
 
-                    html += '</div></div>';
+                    stackFrame.appendChild(frameDetails);
+                    framesContainer.appendChild(stackFrame);
                 });
-                html += '</div>';
+
+                threadDetails.appendChild(framesContainer);
             }
 
             // Thread state for crashed thread
             if (isCrashed && thread.threadState) {
-                html += this.formatThreadState(thread.threadState);
+                threadDetails.appendChild(this.formatThreadState(thread.threadState));
             }
 
-            html += '</details></div>';
+            threadItem.appendChild(threadDetails);
+            threadList.appendChild(threadItem);
         });
 
-        html += '</div></details></div>';
-        return html;
+        details.appendChild(threadList);
+        section.appendChild(details);
+        return section;
     }
 
     formatThreadState(state) {
-        if (!state) return '';
+        if (!state) return null;
 
-        let html = '<div style="margin-top: 15px;">';
-        html += '<h4 style="margin-bottom: 10px; color: #555;">Register State</h4>';
-        html += '<div class="registers">';
+        const container = this.createDiv();
+        container.style.marginTop = '15px';
+
+        const header = this.createElement('h4');
+        header.style.marginBottom = '10px';
+        header.style.color = '#555';
+        header.textContent = 'Register State';
+        container.appendChild(header);
+
+        const registersGrid = this.createDiv('registers');
 
         let registers = [];
 
         if (state.x) {
             for (let i = 0; i < state.x.length; i++) {
-                registers.push({
-                    name: 'x' + i,
-                    object: state.x[i]
-                });
+                registers.push({ name: 'x' + i, object: state.x[i] });
             }
         }
         if (state.fp) registers.push({ name: 'fp', object: state.fp });
@@ -349,26 +420,33 @@ class StructuredIPSParser {
 
         registers.forEach(reg => {
             const value = reg.object.value || 0;
-            html += '<div class="register">';
-            html += `<div class="register-name">${this.escapeHtml(reg.name)}:</div>`;
-            html += `<div class="register-value">0x${value.toString(16).padStart(16, '0')}</div>`;
+            const registerDiv = this.createDiv('register');
+
+            registerDiv.appendChild(this.createDiv('register-name', reg.name + ':'));
+            registerDiv.appendChild(this.createDiv('register-value', `0x${value.toString(16).padStart(16, '0')}`));
+
             if (reg.object.description) {
-                html += `<div class="register-desc">${this.escapeHtml(reg.object.description)}</div>`;
+                registerDiv.appendChild(this.createDiv('register-desc', reg.object.description));
             }
-            html += '</div>';
+
+            registersGrid.appendChild(registerDiv);
         });
 
-        html += '</div></div>';
-        return html;
+        container.appendChild(registersGrid);
+        return container;
     }
 
     formatBinaryImages() {
         const images = this.report.usedImages || [];
 
-        let html = '<div class="crash-section">';
-        html += '<details>';
-        html += '<summary>Binary Images</summary>';
-        html += '<div style="margin-top: 15px;">';
+        const section = this.createDiv('crash-section');
+        const details = this.createElement('details');
+
+        const summary = this.createElement('summary', null, 'Binary Images');
+        details.appendChild(summary);
+
+        const container = this.createDiv();
+        container.style.marginTop = '15px';
 
         images.forEach((image) => {
             if (image.size === 0) return;
@@ -376,27 +454,44 @@ class StructuredIPSParser {
             const base = image.base || 0;
             const end = base + (image.size || 0) - 1;
 
-            html += '<div class="binary-image">';
-            html += `<div class="image-range">${this.formatAddress(base)} - ${this.formatAddress(end)}</div>`;
-            html += `<div class="image-name">${this.escapeHtml(image.name || '???')}</div>`;
-            html += `<div class="image-details">`;
-            html += `<span class="image-arch">${this.escapeHtml(image.arch || 'unknown')}</span> `;
-            html += `<span class="image-uuid">&lt;${this.escapeHtml(image.uuid || '')}&gt;</span> `;
-            html += `<span class="image-path">${this.escapeHtml(image.path || '???')}</span>`;
-            html += '</div></div>';
+            const binaryImage = this.createDiv('binary-image');
+
+            const rangeDiv = this.createDiv('image-range');
+            rangeDiv.appendChild(this.createAddress(base));
+            rangeDiv.append(' - ');
+            rangeDiv.appendChild(this.createAddress(end));
+            binaryImage.appendChild(rangeDiv);
+
+            binaryImage.appendChild(this.createDiv('image-name', image.name || '???'));
+
+            const detailsDiv = this.createDiv('image-details');
+            detailsDiv.appendChild(this.createSpan('image-arch', image.arch || 'unknown'));
+            detailsDiv.append(' ');
+            detailsDiv.appendChild(this.createSpan('image-uuid', `<${image.uuid || ''}>`));
+            detailsDiv.append(' ');
+            detailsDiv.appendChild(this.createSpan('image-path', image.path || '???'));
+
+            binaryImage.appendChild(detailsDiv);
+            container.appendChild(binaryImage);
         });
 
-        html += '</div></details></div>';
-        return html;
+        details.appendChild(container);
+        section.appendChild(details);
+        return section;
     }
 
     formatVMSummary() {
-        let html = '<div class="crash-section">';
-        html += '<details>';
-        html += '<summary>VM Region Summary</summary>';
-        html += `<div class="vm-summary">${this.escapeHtml(this.report.vmSummary)}</div>`;
-        html += '</details></div>';
-        return html;
+        const section = this.createDiv('crash-section');
+        const details = this.createElement('details');
+
+        const summary = this.createElement('summary', null, 'VM Region Summary');
+        details.appendChild(summary);
+
+        const vmDiv = this.createDiv('vm-summary', this.report.vmSummary);
+
+        details.appendChild(vmDiv);
+        section.appendChild(details);
+        return section;
     }
 }
 
@@ -424,7 +519,8 @@ document.addEventListener('DOMContentLoaded', () => {
             parser.parse();
             const formatted = parser.formatReport();
 
-            reportOutput.innerHTML = formatted;
+            reportOutput.textContent = '';
+            reportOutput.appendChild(formatted);
             outputSection.style.display = 'block';
             errorMessage.style.display = 'none';
         } catch (error) {
