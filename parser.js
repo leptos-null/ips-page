@@ -67,6 +67,12 @@ class IPSParser {
         output += this.formatBinaryImages();
         output += '\n';
 
+        // External Modification Summary
+        if (this.report.extMods) {
+            output += this.formatExtMods();
+            output += '\n';
+        }
+
         // VM Summary
         if (this.report.vmSummary) {
             output += 'VM Region Summary:\n';
@@ -79,6 +85,7 @@ class IPSParser {
 
     formatHeader() {
         const b = this.report.bundleInfo || {};
+        const build = this.report.buildInfo || {};
         const os = this.report.osVersion || {};
 
         let header = '';
@@ -86,6 +93,12 @@ class IPSParser {
         header += `Path:                ${this.report.procPath || 'Unknown'}\n`;
         header += `Identifier:          ${b.CFBundleIdentifier || 'Unknown'}\n`;
         header += `Version:             ${b.CFBundleShortVersionString || '?'} (${b.CFBundleVersion || '?'})\n`;
+
+        // Build Info
+        if (build.ProjectName && build.SourceVersion && build.BuildVersion) {
+            header += `Build Info:          ${build.ProjectName}-${build.SourceVersion}~${build.BuildVersion}\n`;
+        }
+
         header += `Code Type:           ${this.formatCPUType(this.report.cpuType)}\n`;
 
         if (this.report.procRole) {
@@ -133,6 +146,12 @@ class IPSParser {
             header += `\n`;
         }
 
+        // System Integrity Protection
+        if (this.report.sip !== undefined) {
+            header += `System Integrity Protection: ${this.report.sip}\n`;
+            header += `\n`;
+        }
+
         if (this.report.faultingThread !== undefined) {
             header += `Triggered by Thread: ${this.report.faultingThread}\n`;
         }
@@ -151,7 +170,11 @@ class IPSParser {
         }
         output += '\n';
 
-        if (ex.codes) {
+        if (ex.subtype !== undefined) {
+            output += `Exception Subtype: ${ex.subtype}\n`;
+        }
+
+        if (ex.codes !== undefined) {
             output += `Exception Codes:   ${ex.codes}\n`;
         }
 
@@ -166,6 +189,12 @@ class IPSParser {
             if (term.byProc) {
                 output += `Terminating Process: ${term.byProc} [${term.byPid || 0}]\n`;
             }
+        }
+
+        // VM Region Info
+        if (this.report.vmRegionInfo) {
+            output += `\n\n`;
+            output += `VM Region Info: ${this.report.vmRegionInfo}`;
         }
 
         return output;
@@ -230,13 +259,19 @@ class IPSParser {
             if (isCrashed) {
                 output += ' Crashed';
             }
-            output += ':\n';
+            output += ':';
+
+            // Add dispatch queue if present
+            if (thread.queue) {
+                output += `:  Dispatch queue: ${thread.queue}`;
+            }
+            output += '\n';
 
             // Stack frames
             if (thread.frames && thread.frames.length > 0) {
                 thread.frames.forEach((frame, index) => {
                     const imageInfo = this.report.usedImages[frame.imageIndex];
-                    const imageName = imageInfo ? imageInfo.name : 'Unknown';
+                    const imageName = imageInfo?.name || '???';
                     const address = (imageInfo?.base || 0) + frame.imageOffset;
                     const symbol = frame.symbol || `0x${(imageInfo?.base || 0).toString(16)} + ${frame.imageOffset}`;
 
@@ -270,60 +305,71 @@ class IPSParser {
         const state = thread.threadState;
         if (!state) return '';
 
-        let output = `\nThread ${threadNum} crashed with ARM Thread State (64-bit):\n`;
-
+        let threadStateTitle = '';
         let registers = [];
+        let additionalInfo = '';
 
-        if (state.x) {
-            for (let i = 0; i < state.x.length; i++) {
-                registers.push({
-                    name: 'x' + i,
-                    object: state.x[i]
+        switch (state.flavor) {
+            case 'ARM_THREAD_STATE64':
+                threadStateTitle = 'ARM Thread State (64-bit)';
+
+                if (state.x) {
+                    for (let i = 0; i < state.x.length; i++) {
+                        registers.push({ name: 'x' + i, object: state.x[i] });
+                    }
+                }
+                if (state.fp) registers.push({ name: 'fp', object: state.fp });
+                if (state.lr) registers.push({ name: 'lr', object: state.lr });
+                if (state.sp) registers.push({ name: 'sp', object: state.sp });
+                if (state.pc) registers.push({ name: 'pc', object: state.pc });
+                if (state.cpsr) registers.push({ name: 'cpsr', object: state.cpsr });
+                if (state.far) registers.push({ name: 'far', object: state.far });
+                if (state.esr) registers.push({ name: 'esr', object: state.esr });
+                break;
+
+            case 'x86_THREAD_STATE':
+                threadStateTitle = 'X86 Thread State (64-bit)';
+
+                // x86_64 register order matching Apple's format
+                const x86Regs = [
+                    'rax', 'rbx', 'rcx', 'rdx', 'rdi', 'rsi', 'rbp', 'rsp',
+                    'r8', 'r9', 'r10', 'r11', 'r12', 'r13', 'r14', 'r15',
+                    'rip', 'rflags', 'cr2'
+                ];
+
+                x86Regs.forEach(regName => {
+                    if (state[regName]) {
+                        // Map 'rflags' to 'rfl' for display
+                        const displayName = regName === 'rflags' ? 'rfl' : regName;
+                        registers.push({ name: displayName, object: state[regName] });
+                    }
                 });
-            }
+
+                // Additional x86 fields
+                if (state.cpu !== undefined) {
+                    additionalInfo += `\nLogical CPU:     ${state.cpu.value}\n`;
+                }
+                if (state.err !== undefined) {
+                    additionalInfo += `Error Code:      0x${state.err.value.toString(16).padStart(8, '0')}`;
+                    if (state.err.description) {
+                        additionalInfo += ` ${state.err.description}`;
+                    }
+                    additionalInfo += '\n';
+                }
+                if (state.trap !== undefined) {
+                    additionalInfo += `Trap Number:     ${state.trap.value}`;
+                    if (state.trap.description) {
+                        additionalInfo += ` ${state.trap.description}`;
+                    }
+                    additionalInfo += '\n';
+                }
+                break;
+
+            default:
+                return '';
         }
-        if (state.fp) {
-            registers.push({
-                name: 'fp',
-                object: state.fp
-            });
-        }
-        if (state.lr) {
-            registers.push({
-                name: 'lr',
-                object: state.lr
-            });
-        }
-        if (state.sp) {
-            registers.push({
-                name: 'sp',
-                object: state.sp
-            });
-        }
-        if (state.pc) {
-            registers.push({
-                name: 'pc',
-                object: state.pc
-            });
-        }
-        if (state.cpsr) {
-            registers.push({
-                name: 'cpsr',
-                object: state.cpsr
-            });
-        }
-        if (state.far) {
-            registers.push({
-                name: 'far',
-                object: state.far
-            });
-        }
-        if (state.esr) {
-            registers.push({
-                name: 'esr',
-                object: state.esr
-            });
-        }
+
+        let output = `\nThread ${threadNum} crashed with ${threadStateTitle}:\n`;
 
         // Format registers in groups of 4
         for (let i = 0; i < registers.length; i += 4) {
@@ -338,6 +384,7 @@ class IPSParser {
             output += line + '\n';
         }
 
+        output += additionalInfo;
         output += '\n';
 
         return output;
@@ -363,6 +410,57 @@ class IPSParser {
             output += ` <${(image.uuid || '').replace(/-/g, '')}>`;
             output += ` ${image.path || '???'}\n`;
         });
+
+        return output;
+    }
+
+    formatExtMods() {
+        const extMods = this.report.extMods;
+        if (!extMods) return '';
+
+        let output = '\nExternal Modification Summary:\n';
+
+        // Calls made by other processes targeting this process
+        if (extMods.targeted) {
+            output += '  Calls made by other processes targeting this process:\n';
+            if (extMods.targeted.task_for_pid !== undefined) {
+                output += `    task_for_pid: ${extMods.targeted.task_for_pid}\n`;
+            }
+            if (extMods.targeted.thread_create !== undefined) {
+                output += `    thread_create: ${extMods.targeted.thread_create}\n`;
+            }
+            if (extMods.targeted.thread_set_state !== undefined) {
+                output += `    thread_set_state: ${extMods.targeted.thread_set_state}\n`;
+            }
+        }
+
+        // Calls made by this process
+        if (extMods.caller) {
+            output += '  Calls made by this process:\n';
+            if (extMods.caller.task_for_pid !== undefined) {
+                output += `    task_for_pid: ${extMods.caller.task_for_pid}\n`;
+            }
+            if (extMods.caller.thread_create !== undefined) {
+                output += `    thread_create: ${extMods.caller.thread_create}\n`;
+            }
+            if (extMods.caller.thread_set_state !== undefined) {
+                output += `    thread_set_state: ${extMods.caller.thread_set_state}\n`;
+            }
+        }
+
+        // Calls made by all processes on this machine
+        if (extMods.system) {
+            output += '  Calls made by all processes on this machine:\n';
+            if (extMods.system.task_for_pid !== undefined) {
+                output += `    task_for_pid: ${extMods.system.task_for_pid}\n`;
+            }
+            if (extMods.system.thread_create !== undefined) {
+                output += `    thread_create: ${extMods.system.thread_create}\n`;
+            }
+            if (extMods.system.thread_set_state !== undefined) {
+                output += `    thread_set_state: ${extMods.system.thread_set_state}\n`;
+            }
+        }
 
         return output;
     }
