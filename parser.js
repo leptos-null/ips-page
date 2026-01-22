@@ -318,13 +318,15 @@ class IPSParser {
                         registers.push({ name: 'x' + i, object: state.x[i] });
                     }
                 }
-                if (state.fp) registers.push({ name: 'fp', object: state.fp });
-                if (state.lr) registers.push({ name: 'lr', object: state.lr });
-                if (state.sp) registers.push({ name: 'sp', object: state.sp });
-                if (state.pc) registers.push({ name: 'pc', object: state.pc });
-                if (state.cpsr) registers.push({ name: 'cpsr', object: state.cpsr });
-                if (state.far) registers.push({ name: 'far', object: state.far });
-                if (state.esr) registers.push({ name: 'esr', object: state.esr });
+                const namedRegs = [
+                    'fp', 'lr', 'sp', 'pc', 'cpsr',
+                    'far', 'esr'
+                ];
+                namedRegs.forEach(regName => {
+                    if (state[regName]) {
+                        registers.push({ name: regName, object: state[regName] });
+                    }
+                });
                 break;
 
             case 'x86_THREAD_STATE':
