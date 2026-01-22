@@ -366,6 +366,9 @@ class StructuredIPSParser {
 
             const threadItem = this.createDiv(isCrashed ? 'thread-item crashed' : 'thread-item');
             const threadDetails = this.createElement('details');
+            if (isCrashed) {
+                threadDetails.open = true;
+            }
 
             const threadSummary = this.createElement('summary', 'thread-header');
             const summaryFrag = document.createDocumentFragment();
