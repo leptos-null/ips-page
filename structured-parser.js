@@ -380,9 +380,9 @@ class StructuredIPSParser {
             html += `<div class="image-range">${this.formatAddress(base)} - ${this.formatAddress(end)}</div>`;
             html += `<div class="image-name">${this.escapeHtml(image.name || '???')}</div>`;
             html += `<div class="image-details">`;
-            html += `${this.escapeHtml(image.arch || 'unknown')} `;
-            html += `&lt;${this.escapeHtml(image.uuid || '')}&gt; `;
-            html += `${this.escapeHtml(image.path || '???')}`;
+            html += `<span class="image-arch">${this.escapeHtml(image.arch || 'unknown')}</span> `;
+            html += `<span class="image-uuid">&lt;${this.escapeHtml(image.uuid || '')}&gt;</span> `;
+            html += `<span class="image-path">${this.escapeHtml(image.path || '???')}</span>`;
             html += '</div></div>';
         });
 

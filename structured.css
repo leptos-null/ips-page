@@ -222,6 +222,20 @@
     color: #666;
 }
 
+.image-arch {
+    color: #ea580c;
+    font-weight: 500;
+}
+
+.image-uuid {
+    color: #888;
+    font-family: inherit;
+}
+
+.image-path {
+    color: #059669;
+}
+
 /* Exception info */
 .exception-info {
     background: #fff5f5;
@@ -332,6 +346,18 @@
 
     .image-details {
         color: #999;
+    }
+
+    .image-arch {
+        color: #fb923c;
+    }
+
+    .image-uuid {
+        color: #888;
+    }
+
+    .image-path {
+        color: #34d399;
     }
 
     .exception-info {
