@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPS Crash Report Viewer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>IPS Crash Report Viewer</h1>
+            <p>Paste the contents of an IPS file to view it in a human-readable format</p>
+        </header>
+
+        <div class="input-section">
+            <textarea
+                id="ipsInput"
+                placeholder="Paste IPS file contents here..."
+                spellcheck="false"
+            ></textarea>
+            <div class="button-group">
+                <button id="parseBtn" class="btn-primary">Parse Report</button>
+                <button id="clearBtn" class="btn-secondary">Clear</button>
+            </div>
+        </div>
+
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+        <div id="output" class="output-section" style="display: none;">
+            <div class="output-header">
+                <h2>Crash Report</h2>
+                <button id="copyBtn" class="btn-secondary">Copy to Clipboard</button>
+            </div>
+            <pre id="reportOutput"></pre>
+        </div>
+    </div>
+
+    <script src="parser.js"></script>
+</body>
+</html>
