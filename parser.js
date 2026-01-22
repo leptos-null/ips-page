@@ -84,19 +84,19 @@ class IPSParser {
     }
 
     formatHeader() {
-        const b = this.report.bundleInfo || {};
-        const build = this.report.buildInfo || {};
-        const os = this.report.osVersion || {};
+        const bundleInfo = this.report.bundleInfo || {};
+        const buildInfo = this.report.buildInfo || {};
+        const osVersion = this.report.osVersion || {};
 
         let header = '';
         header += `Process:             ${this.report.procName || 'Unknown'} [${this.report.pid || 0}]\n`;
         header += `Path:                ${this.report.procPath || 'Unknown'}\n`;
-        header += `Identifier:          ${b.CFBundleIdentifier || 'Unknown'}\n`;
-        header += `Version:             ${b.CFBundleShortVersionString || '?'} (${b.CFBundleVersion || '?'})\n`;
+        header += `Identifier:          ${bundleInfo.CFBundleIdentifier || 'Unknown'}\n`;
+        header += `Version:             ${bundleInfo.CFBundleShortVersionString || '?'} (${bundleInfo.CFBundleVersion || '?'})\n`;
 
         // Build Info
-        if (build.ProjectName && build.SourceVersion && build.BuildVersion) {
-            header += `Build Info:          ${build.ProjectName}-${build.SourceVersion}~${build.BuildVersion}\n`;
+        if (buildInfo.ProjectName && buildInfo.SourceVersion && buildInfo.BuildVersion) {
+            header += `Build Info:          ${buildInfo.ProjectName}-${buildInfo.SourceVersion}~${buildInfo.BuildVersion}\n`;
         }
 
         header += `Code Type:           ${this.formatCPUType(this.report.cpuType)}\n`;
@@ -126,10 +126,10 @@ class IPSParser {
             header += `Hardware Model:      ${this.report.modelCode}\n`;
         }
 
-        header += `OS Version:          ${os.train || 'Unknown'} (${os.build || 'Unknown'})\n`;
+        header += `OS Version:          ${osVersion.train || 'Unknown'} (${osVersion.build || 'Unknown'})\n`;
 
-        if (os.releaseType) {
-            header += `Release Type:        ${os.releaseType}\n`;
+        if (osVersion.releaseType) {
+            header += `Release Type:        ${osVersion.releaseType}\n`;
         }
 
         header += `\n`;
