@@ -88,6 +88,7 @@ class IPSParser {
     formatHeader() {
         const bundleInfo = this.report.bundleInfo || {};
         const buildInfo = this.report.buildInfo || {};
+        const storeInfo = this.report.storeInfo || {};
         const osVersion = this.report.osVersion || {};
 
         let header = '';
@@ -95,6 +96,18 @@ class IPSParser {
         header += `Path:                ${this.report.procPath || 'Unknown'}\n`;
         header += `Identifier:          ${bundleInfo.CFBundleIdentifier || 'Unknown'}\n`;
         header += `Version:             ${bundleInfo.CFBundleShortVersionString || '?'} (${bundleInfo.CFBundleVersion || '?'})\n`;
+
+        if (bundleInfo.DTAppStoreToolsBuild) {
+            header += `AppStoreTools:       ${bundleInfo.DTAppStoreToolsBuild}\n`;
+        }
+
+        if (storeInfo.applicationVariant) {
+            header += `AppVariant:          ${storeInfo.applicationVariant}\n`;
+        }
+
+        if (this.report.isBeta !== undefined) {
+            header += `Beta:                ${this.report.isBeta ? 'YES' : 'NO'}\n`;
+        }
 
         // Build Info
         if (buildInfo.ProjectName && buildInfo.SourceVersion && buildInfo.BuildVersion) {
@@ -129,13 +142,29 @@ class IPSParser {
             header += `Hardware Model:      ${this.report.modelCode}\n`;
         }
 
+        if (this.report.codeName) {
+            header += `Device Model:        ${this.report.codeName}\n`;
+        }
+
         header += `OS Version:          ${osVersion.train || 'Unknown'} (${osVersion.build || 'Unknown'})\n`;
 
         if (osVersion.releaseType) {
             header += `Release Type:        ${osVersion.releaseType}\n`;
         }
 
+        if (this.report.basebandVersion) {
+            header += `Baseband Version:    ${this.report.basebandVersion}\n`;
+        }
+
         header += `\n`;
+
+        if (storeInfo.deviceIdentifierForVendor) {
+            header += `Beta Identifier:     ${storeInfo.deviceIdentifierForVendor}\n`;
+        }
+
+        if (this.report.systemID) {
+            header += `UDID:                ${this.report.systemID}\n`;
+        }
 
         if (this.report.crashReporterKey) {
             header += `Crash Reporter Key:  ${this.report.crashReporterKey}\n`;
