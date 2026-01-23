@@ -1,3 +1,5 @@
+"use strict";
+
 // IPS Crash Report Structured Parser
 class StructuredIPSParser {
     constructor(ipsContent) {
