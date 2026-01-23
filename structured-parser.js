@@ -106,9 +106,9 @@ class StructuredIPSParser {
     }
 
     formatProcessInfo() {
-        const b = this.report.bundleInfo || {};
-        const build = this.report.buildInfo || {};
-        const os = this.report.osVersion || {};
+        const bundleInfo = this.report.bundleInfo || {};
+        const buildInfo = this.report.buildInfo || {};
+        const osVersion = this.report.osVersion || {};
 
         const section = this.createDiv('crash-section');
         const details = this.createElement('details');
@@ -135,12 +135,12 @@ class StructuredIPSParser {
         addRow('Process', procValue);
 
         addRow('Path', this.report.procPath || 'Unknown');
-        addRow('Identifier', b.CFBundleIdentifier || 'Unknown');
-        addRow('Version', `${b.CFBundleShortVersionString || '?'} (${b.CFBundleVersion || '?'})`);
+        addRow('Identifier', bundleInfo.CFBundleIdentifier || 'Unknown');
+        addRow('Version', `${bundleInfo.CFBundleShortVersionString || '?'} (${bundleInfo.CFBundleVersion || '?'})`);
 
         // Build Info
-        if (build.ProjectName && build.SourceVersion && build.BuildVersion) {
-            addRow('Build Info', `${build.ProjectName}-${build.SourceVersion}~${build.BuildVersion}`);
+        if (buildInfo.ProjectName && buildInfo.SourceVersion && buildInfo.BuildVersion) {
+            addRow('Build Info', `${buildInfo.ProjectName}-${buildInfo.SourceVersion}~${buildInfo.BuildVersion}`);
         }
 
         addRow('Code Type', this.report.cpuType || 'Unknown');
@@ -173,10 +173,10 @@ class StructuredIPSParser {
             addRow('Hardware Model', this.report.modelCode);
         }
 
-        addRow('OS Version', `${os.train || 'Unknown'} (${os.build || 'Unknown'})`);
+        addRow('OS Version', `${osVersion.train || 'Unknown'} (${osVersion.build || 'Unknown'})`);
 
-        if (os.releaseType) {
-            addRow('Release Type', os.releaseType);
+        if (osVersion.releaseType) {
+            addRow('Release Type', osVersion.releaseType);
         }
 
         if (this.report.crashReporterKey) {
