@@ -108,6 +108,7 @@ class StructuredIPSParser {
     formatProcessInfo() {
         const bundleInfo = this.report.bundleInfo || {};
         const buildInfo = this.report.buildInfo || {};
+        const storeInfo = this.report.storeInfo || {};
         const osVersion = this.report.osVersion || {};
 
         const section = this.createDiv('crash-section');
@@ -137,6 +138,18 @@ class StructuredIPSParser {
         addRow('Path', this.report.procPath || 'Unknown');
         addRow('Identifier', bundleInfo.CFBundleIdentifier || 'Unknown');
         addRow('Version', `${bundleInfo.CFBundleShortVersionString || '?'} (${bundleInfo.CFBundleVersion || '?'})`);
+
+        if (bundleInfo.DTAppStoreToolsBuild) {
+            addRow('AppStoreTools', bundleInfo.DTAppStoreToolsBuild);
+        }
+
+        if (storeInfo.applicationVariant) {
+            addRow('AppVariant', storeInfo.applicationVariant);
+        }
+
+        if (this.report.isBeta !== undefined) {
+            addRow('Beta', this.report.isBeta ? 'YES' : 'NO');
+        }
 
         // Build Info
         if (buildInfo.ProjectName && buildInfo.SourceVersion && buildInfo.BuildVersion) {
@@ -174,14 +187,30 @@ class StructuredIPSParser {
             addRow('Hardware Model', this.report.modelCode);
         }
 
+        if (this.report.codeName) {
+            addRow('Device Model', this.report.codeName);
+        }
+
         addRow('OS Version', `${osVersion.train || 'Unknown'} (${osVersion.build || 'Unknown'})`);
 
         if (osVersion.releaseType) {
             addRow('Release Type', osVersion.releaseType);
         }
 
+        if (this.report.basebandVersion) {
+            addRow('Baseband Version', this.report.basebandVersion);
+        }
+
         if (this.report.crashReporterKey) {
             addRow('Crash Reporter Key', this.report.crashReporterKey);
+        }
+
+        if (storeInfo.deviceIdentifierForVendor) {
+            addRow('Beta Identifier', storeInfo.deviceIdentifierForVendor);
+        }
+
+        if (this.report.systemID) {
+            addRow('UDID', this.report.systemID);
         }
 
         if (this.report.incident) {
@@ -196,6 +225,16 @@ class StructuredIPSParser {
 
         if (this.report.sip !== undefined) {
             addRow('System Integrity Protection', this.report.sip);
+        }
+
+        if (this.report.developerMode !== undefined) {
+            addRow('Developer Mode', this.report.developerMode ? 'enabled' : 'disabled');
+        }
+
+        if (this.report.appleIntelligenceStatus) {
+            const aiStatus = this.report.appleIntelligenceStatus;
+            const statusText = `${aiStatus.state || 'unknown'}${aiStatus.reasons ? ' (' + aiStatus.reasons.join(', ') + ')' : ''}`;
+            addRow('Apple Intelligence', statusText);
         }
 
         details.appendChild(grid);
@@ -266,6 +305,23 @@ class StructuredIPSParser {
             vmDetail.style.whiteSpace = 'pre-wrap';
             vmDetail.textContent = `VM Region Info: ${this.report.vmRegionInfo}`;
             exceptionInfo.appendChild(vmDetail);
+        }
+
+        if (this.report.instructionByteStream) {
+            const instDetail = this.createDiv('exception-detail');
+            instDetail.style.marginTop = '10px';
+            instDetail.style.fontFamily = '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace';
+            const inst = this.report.instructionByteStream;
+            const instFrag = document.createDocumentFragment();
+            instFrag.append('Instruction Bytes:');
+            if (inst.beforePC) {
+                instFrag.append('\n  Before PC: ', inst.beforePC);
+            }
+            if (inst.atPC) {
+                instFrag.append('\n  At PC: ', inst.atPC);
+            }
+            instDetail.appendChild(instFrag);
+            exceptionInfo.appendChild(instDetail);
         }
 
         if (this.report.faultingThread !== undefined) {
