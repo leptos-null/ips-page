@@ -101,7 +101,8 @@ class IPSParser {
             header += `Build Info:          ${buildInfo.ProjectName}-${buildInfo.SourceVersion}~${buildInfo.BuildVersion}\n`;
         }
 
-        header += `Code Type:           ${this.formatCPUType(this.report.cpuType)}\n`;
+        const translatedLabel = this.report.translated ? 'Translated' : 'Native';
+        header += `Code Type:           ${this.report.cpuType || '???'} (${translatedLabel})\n`;
 
         if (this.report.procRole) {
             header += `Role:                ${this.report.procRole}\n`;
@@ -467,16 +468,6 @@ class IPSParser {
         }
 
         return output;
-    }
-
-    formatCPUType(cpuType) {
-        const types = {
-            'ARM-64': 'ARM-64 (Native)',
-            'ARM': 'ARM (Native)',
-            'X86-64': 'X86-64 (Native)',
-            'X86': 'X86 (Native)'
-        };
-        return types[cpuType] || cpuType || 'Unknown';
     }
 }
 
