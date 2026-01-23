@@ -143,7 +143,8 @@ class StructuredIPSParser {
             addRow('Build Info', `${buildInfo.ProjectName}-${buildInfo.SourceVersion}~${buildInfo.BuildVersion}`);
         }
 
-        addRow('Code Type', this.report.cpuType || 'Unknown');
+        const translatedLabel = this.report.translated ? 'Translated' : 'Native';
+        addRow('Code Type', `${this.report.cpuType || 'Unknown'} (${translatedLabel})`);
 
         if (this.report.procRole) {
             addRow('Role', this.report.procRole);
