@@ -164,12 +164,18 @@ class StructuredIPSParser {
         }
 
         const parentValue = document.createDocumentFragment();
-        parentValue.append(this.report.parentProc || 'Unknown', ' [', this.createNumber(this.report.parentPid || 0), ']');
+        parentValue.append(this.report.parentProc || 'Unknown');
+        if (this.report.parentPid !== undefined) {
+            parentValue.append(' [', this.createNumber(this.report.parentPid), ']');
+        }
         addRow('Parent Process', parentValue);
 
         if (this.report.coalitionName) {
             const coalValue = document.createDocumentFragment();
-            coalValue.append(this.report.coalitionName, ' [', this.createNumber(this.report.coalitionID || 0), ']');
+            coalValue.append(this.report.coalitionName);
+            if (this.report.coalitionID !== undefined) {
+                coalValue.append(' [', this.createNumber(this.report.coalitionID), ']');
+            }
             addRow('Coalition', coalValue);
         }
 

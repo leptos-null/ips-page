@@ -121,10 +121,18 @@ class IPSParser {
             header += `Role:                ${this.report.procRole}\n`;
         }
 
-        header += `Parent Process:      ${this.report.parentProc || 'Unknown'} [${this.report.parentPid || 0}]\n`;
+        header += `Parent Process:      ${this.report.parentProc || 'Unknown'}`;
+        if (this.report.parentPid !== undefined) {
+            header += ` [${this.report.parentPid}]`;
+        }
+        header += '\n';
 
         if (this.report.coalitionName) {
-            header += `Coalition:           ${this.report.coalitionName} [${this.report.coalitionID || 0}]\n`;
+            header += `Coalition:           ${this.report.coalitionName}`;
+            if (this.report.coalitionID !== undefined) {
+                header += ` [${this.report.coalitionID}]`;
+            }
+            header += '\n';
         }
 
         if (this.report.responsibleProc) {
