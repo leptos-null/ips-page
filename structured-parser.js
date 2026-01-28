@@ -173,6 +173,15 @@ class StructuredIPSParser {
             addRow('Coalition', coalValue);
         }
 
+        if (this.report.responsibleProc) {
+            const respValue = document.createDocumentFragment();
+            respValue.append(this.report.responsibleProc);
+            if (this.report.responsiblePid !== undefined) {
+                respValue.append(' [', this.createNumber(this.report.responsiblePid), ']');
+            }
+            addRow('Responsible Process', respValue);
+        }
+
         if (this.report.userID !== undefined) {
             addRow('User ID', String(this.report.userID));
         }
@@ -181,6 +190,14 @@ class StructuredIPSParser {
 
         if (this.report.procLaunch) {
             addRow('Launch Time', this.report.procLaunch);
+        }
+
+        if (this.report.procStartAbsTime !== undefined) {
+            addRow('Process Start (Absolute)', String(this.report.procStartAbsTime));
+        }
+
+        if (this.report.procExitAbsTime !== undefined) {
+            addRow('Process Exit (Absolute)', String(this.report.procExitAbsTime));
         }
 
         if (this.report.modelCode) {
@@ -205,6 +222,14 @@ class StructuredIPSParser {
             addRow('Crash Reporter Key', this.report.crashReporterKey);
         }
 
+        if (this.report.bootSessionUUID) {
+            addRow('Boot Session UUID', this.report.bootSessionUUID);
+        }
+
+        if (this.report.sleepWakeUUID) {
+            addRow('Sleep/Wake UUID', this.report.sleepWakeUUID);
+        }
+
         if (storeInfo.deviceIdentifierForVendor) {
             addRow('Beta Identifier', storeInfo.deviceIdentifierForVendor);
         }
@@ -223,6 +248,12 @@ class StructuredIPSParser {
             addRow('Uptime', uptimeValue);
         }
 
+        if (this.report.wakeTime !== undefined) {
+            const wakeValue = document.createDocumentFragment();
+            wakeValue.append(this.createNumber(this.report.wakeTime), ' seconds');
+            addRow('Time Since Wake', wakeValue);
+        }
+
         if (this.report.sip !== undefined) {
             addRow('System Integrity Protection', this.report.sip);
         }
@@ -235,6 +266,54 @@ class StructuredIPSParser {
             const aiStatus = this.report.appleIntelligenceStatus;
             const statusText = `${aiStatus.state || 'unknown'}${aiStatus.reasons ? ' (' + aiStatus.reasons.join(', ') + ')' : ''}`;
             addRow('Apple Intelligence', statusText);
+        }
+
+        if (this.report.deployVersion !== undefined) {
+            addRow('Deploy Version', String(this.report.deployVersion));
+        }
+
+        if (this.report.throttleTimeout !== undefined) {
+            addRow('Throttle Timeout', String(this.report.throttleTimeout));
+        }
+
+        if (this.report.codeSigningMonitor !== undefined) {
+            addRow('Code Signing Monitor', String(this.report.codeSigningMonitor));
+        }
+
+        if (this.report.codeSigningID !== undefined) {
+            addRow('Code Signing ID', this.report.codeSigningID || '(none)');
+        }
+
+        if (this.report.codeSigningTeamID !== undefined) {
+            addRow('Code Signing Team ID', this.report.codeSigningTeamID || '(none)');
+        }
+
+        if (this.report.codeSigningFlags !== undefined) {
+            addRow('Code Signing Flags', `0x${this.report.codeSigningFlags.toString(16)}`);
+        }
+
+        if (this.report.codeSigningValidationCategory !== undefined) {
+            addRow('Code Signing Validation', String(this.report.codeSigningValidationCategory));
+        }
+
+        if (this.report.codeSigningTrustLevel !== undefined) {
+            addRow('Code Signing Trust Level', String(this.report.codeSigningTrustLevel));
+        }
+
+        if (this.report.codeSigningAuxiliaryInfo !== undefined) {
+            addRow('Code Signing Auxiliary', `0x${this.report.codeSigningAuxiliaryInfo.toString(16)}`);
+        }
+
+        if (this.report.bootProgressRegister !== undefined) {
+            addRow('Boot Progress Register', this.report.bootProgressRegister);
+        }
+
+        if (this.report.wasUnlockedSinceBoot !== undefined) {
+            addRow('Unlocked Since Boot', this.report.wasUnlockedSinceBoot ? 'YES' : 'NO');
+        }
+
+        if (this.report.isLocked !== undefined) {
+            addRow('Currently Locked', this.report.isLocked ? 'YES' : 'NO');
         }
 
         details.appendChild(grid);
