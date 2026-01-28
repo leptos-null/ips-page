@@ -127,6 +127,14 @@ class IPSParser {
             header += `Coalition:           ${this.report.coalitionName} [${this.report.coalitionID || 0}]\n`;
         }
 
+        if (this.report.responsibleProc) {
+            header += `Responsible Process: ${this.report.responsibleProc}`;
+            if (this.report.responsiblePid !== undefined) {
+                header += ` [${this.report.responsiblePid}]`;
+            }
+            header += '\n';
+        }
+
         if (this.report.userID !== undefined) {
             header += `User ID:             ${this.report.userID}\n`;
         }
@@ -173,8 +181,20 @@ class IPSParser {
         header += `Incident Identifier: ${this.report.incident || this.metadata.incident_id || 'Unknown'}\n`;
         header += `\n`;
 
+        if (this.report.sleepWakeUUID) {
+            header += `Sleep/Wake UUID:       ${this.report.sleepWakeUUID}\n`;
+            header += `\n`;
+        }
+
         if (this.report.uptime !== undefined) {
             header += `Time Awake Since Boot: ${this.report.uptime} seconds\n`;
+        }
+
+        if (this.report.wakeTime !== undefined) {
+            header += `Time Since Wake:       ${this.report.wakeTime} seconds\n`;
+        }
+
+        if (this.report.uptime !== undefined || this.report.wakeTime !== undefined) {
             header += `\n`;
         }
 
