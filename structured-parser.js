@@ -102,6 +102,11 @@ class StructuredIPSParser {
             container.appendChild(this.formatVMSummary());
         }
 
+        // Filtered Log
+        if (this.report.filteredLog && this.report.filteredLog.length > 0) {
+            container.appendChild(this.formatFilteredLog());
+        }
+
         return container;
     }
 
@@ -781,6 +786,25 @@ class StructuredIPSParser {
         const vmDiv = this.createDiv('vm-summary', this.report.vmSummary);
 
         details.appendChild(vmDiv);
+        section.appendChild(details);
+        return section;
+    }
+
+    formatFilteredLog() {
+        const section = this.createDiv('crash-section');
+        const details = this.createElement('details');
+
+        const summary = this.createElement('summary', null, 'Filtered log messages');
+        details.appendChild(summary);
+
+        const logDiv = this.createDiv('filtered-log');
+        logDiv.style.whiteSpace = 'pre-wrap';
+        logDiv.style.fontFamily = '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace';
+        logDiv.style.fontSize = '12px';
+        logDiv.style.marginTop = '10px';
+        logDiv.textContent = this.report.filteredLog.join('\n');
+
+        details.appendChild(logDiv);
         section.appendChild(details);
         return section;
     }

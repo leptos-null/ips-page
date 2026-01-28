@@ -82,6 +82,13 @@ class IPSParser {
             output += '\n';
         }
 
+        // Filtered Log
+        if (this.report.filteredLog && this.report.filteredLog.length > 0) {
+            output += 'Filtered log messages:\n';
+            output += this.report.filteredLog.join('\n');
+            output += '\n\n';
+        }
+
         return output;
     }
 
