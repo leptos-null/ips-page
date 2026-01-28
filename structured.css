@@ -1,5 +1,9 @@
 /* Structured view specific styles */
 
+:root {
+    --code-font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+}
+
 .structured-output {
     max-width: none;
 }
@@ -79,7 +83,7 @@
     grid-template-columns: auto 1fr;
     gap: 8px 20px;
     margin-top: 15px;
-    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-family: var(--code-font-family);
     font-size: 13px;
 }
 
@@ -125,7 +129,7 @@
 
 /* Stack frames */
 .stack-frame {
-    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-family: var(--code-font-family);
     font-size: 12px;
     padding: 4px 0;
     display: grid;
@@ -172,7 +176,7 @@
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 8px;
     margin-top: 15px;
-    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-family: var(--code-font-family);
     font-size: 13px;
 }
 
@@ -199,7 +203,7 @@
 
 /* Binary images */
 .binary-image {
-    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-family: var(--code-font-family);
     font-size: 12px;
     padding: 6px 0;
     display: grid;
@@ -253,7 +257,7 @@
 }
 
 .exception-detail {
-    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-family: var(--code-font-family);
     font-size: 13px;
     color: #2d3748;
     margin: 4px 0;
@@ -282,7 +286,7 @@
 
 /* VM Summary */
 .vm-summary {
-    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-family: var(--code-font-family);
     font-size: 12px;
     background: #f8f9fa;
     padding: 15px;
@@ -294,7 +298,7 @@
 
 /* Filtered Log */
 .filtered-log {
-    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-family: var(--code-font-family);
     font-size: 12px;
     background: #f8f9fa;
     padding: 15px;

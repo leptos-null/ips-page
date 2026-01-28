@@ -6,6 +6,7 @@
 
 :root {
     color-scheme: light dark;
+    --code-font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
 }
 
 body {
@@ -50,7 +51,7 @@ header p {
     width: 100%;
     min-height: 200px;
     padding: 15px;
-    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-family: var(--code-font-family);
     font-size: 13px;
     border: 2px solid #e0e0e0;
     border-radius: 8px;
@@ -132,7 +133,7 @@ button {
 }
 
 #reportOutput {
-    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-family: var(--code-font-family);
     font-size: 13px;
     line-height: 1.5;
     background: #f8f9fa;
