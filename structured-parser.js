@@ -365,8 +365,7 @@ class StructuredIPSParser {
         }
 
         if (term) {
-            const termDetail = this.createDiv('exception-detail');
-            termDetail.style.marginTop = '10px';
+            const termDetail = this.createDiv('exception-detail spaced');
             const termFrag = document.createDocumentFragment();
             termFrag.append(
                 'Termination: Namespace ',
@@ -390,17 +389,14 @@ class StructuredIPSParser {
         }
 
         if (this.report.vmRegionInfo) {
-            const vmDetail = this.createDiv('exception-detail');
-            vmDetail.style.marginTop = '10px';
+            const vmDetail = this.createDiv('exception-detail spaced');
             vmDetail.style.whiteSpace = 'pre-wrap';
             vmDetail.textContent = `VM Region Info: ${this.report.vmRegionInfo}`;
             exceptionInfo.appendChild(vmDetail);
         }
 
         if (this.report.instructionByteStream) {
-            const instDetail = this.createDiv('exception-detail');
-            instDetail.style.marginTop = '10px';
-            instDetail.style.fontFamily = '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace';
+            const instDetail = this.createDiv('exception-detail spaced');
             const inst = this.report.instructionByteStream;
             const instFrag = document.createDocumentFragment();
             instFrag.append('Instruction Bytes:');
@@ -415,8 +411,7 @@ class StructuredIPSParser {
         }
 
         if (this.report.faultingThread !== undefined) {
-            const faultDetail = this.createDiv('exception-detail');
-            faultDetail.style.marginTop = '10px';
+            const faultDetail = this.createDiv('exception-detail spaced');
             const faultFrag = document.createDocumentFragment();
             faultFrag.append('Faulting Thread: ', this.createNumber(this.report.faultingThread));
             faultDetail.appendChild(faultFrag);
@@ -465,8 +460,7 @@ class StructuredIPSParser {
         const summary = this.createElement('summary', null, 'Last Exception Backtrace');
         details.appendChild(summary);
 
-        const container = this.createDiv();
-        container.style.marginTop = '15px';
+        const container = this.createDiv('section-container');
 
         backtrace.forEach((frame, index) => {
             const imageInfo = this.report.usedImages[frame.imageIndex];
@@ -536,8 +530,7 @@ class StructuredIPSParser {
 
             // Stack frames
             if (thread.frames && thread.frames.length > 0) {
-                const framesContainer = this.createDiv();
-                framesContainer.style.marginTop = '10px';
+                const framesContainer = this.createDiv('frames-container');
 
                 thread.frames.forEach((frame, index) => {
                     const imageInfo = this.report.usedImages[frame.imageIndex];
@@ -584,12 +577,9 @@ class StructuredIPSParser {
     formatThreadState(state) {
         if (!state) return null;
 
-        const container = this.createDiv();
-        container.style.marginTop = '15px';
+        const container = this.createDiv('thread-state-container');
 
-        const header = this.createElement('h4');
-        header.style.marginBottom = '10px';
-        header.style.color = '#555';
+        const header = this.createElement('h4', 'thread-state-header');
 
         let registers = [];
 
@@ -665,8 +655,7 @@ class StructuredIPSParser {
         const summary = this.createElement('summary', null, 'Binary Images');
         details.appendChild(summary);
 
-        const container = this.createDiv();
-        container.style.marginTop = '15px';
+        const container = this.createDiv('section-container');
 
         images.forEach((image) => {
             if (image.size === 0) return;
@@ -798,10 +787,6 @@ class StructuredIPSParser {
         details.appendChild(summary);
 
         const logDiv = this.createDiv('filtered-log');
-        logDiv.style.whiteSpace = 'pre-wrap';
-        logDiv.style.fontFamily = '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace';
-        logDiv.style.fontSize = '12px';
-        logDiv.style.marginTop = '10px';
         logDiv.textContent = this.report.filteredLog.join('\n');
 
         details.appendChild(logDiv);

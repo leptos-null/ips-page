@@ -259,8 +259,41 @@
     margin: 4px 0;
 }
 
+.exception-detail.spaced {
+    margin-top: 10px;
+}
+
+.thread-state-container {
+    margin-top: 15px;
+}
+
+.thread-state-header {
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.frames-container {
+    margin-top: 10px;
+}
+
+.section-container {
+    margin-top: 15px;
+}
+
 /* VM Summary */
 .vm-summary {
+    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-size: 12px;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin-top: 15px;
+    white-space: pre-wrap;
+    overflow-x: auto;
+}
+
+/* Filtered Log */
+.filtered-log {
     font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
     font-size: 12px;
     background: #f8f9fa;
@@ -373,7 +406,16 @@
         color: #e0e0e0;
     }
 
+    .thread-state-header {
+        color: #a0a0a0;
+    }
+
     .vm-summary {
+        background: #2a2a2a;
+        color: #e0e0e0;
+    }
+
+    .filtered-log {
         background: #2a2a2a;
         color: #e0e0e0;
     }
