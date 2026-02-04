@@ -215,12 +215,12 @@ export class IPSParser {
             header += `Beta Identifier:     ${storeInfo.deviceIdentifierForVendor}\n`;
         }
 
-        if (this.report.systemID) {
-            header += `UDID:                ${this.report.systemID}\n`;
-        }
-
         if (this.report.crashReporterKey) {
             header += `Crash Reporter Key:  ${this.report.crashReporterKey}\n`;
+        }
+
+        if (this.report.systemID) {
+            header += `UDID:                ${this.report.systemID}\n`;
         }
 
         header += `Incident Identifier: ${this.report.incident || this.metadata.incident_id || 'Unknown'}\n`;
@@ -279,8 +279,19 @@ export class IPSParser {
             output += `Exception Subtype: ${ex.subtype}\n`;
         }
 
+        if (ex.message !== undefined) {
+            output += `Exception Message: ${ex.message}\n`;
+        }
+
         if (ex.codes !== undefined) {
             output += `Exception Codes:   ${ex.codes}\n`;
+        }
+
+        if (this.report.isSimulated) {
+            output += `Exception Note:    SIMULATED (this is NOT a crash)\n`;
+        }
+        if (this.report.isCorpse) {
+            output += `Exception Note:    EXC_CORPSE_NOTIFY\n`;
         }
 
         if (this.report.exceptionReason && this.report.exceptionReason.composed_message) {
