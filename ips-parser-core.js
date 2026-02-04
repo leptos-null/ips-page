@@ -295,6 +295,20 @@ export class IPSParser {
             }
             output += '\n';
 
+            // Termination reasons (detailed error messages)
+            if (term.reasons && term.reasons.length > 0) {
+                term.reasons.forEach(reason => {
+                    output += `${reason}\n`;
+                });
+            }
+
+            // Termination details (e.g., "terminated at launch; ignore backtrace")
+            if (term.details && term.details.length > 0) {
+                term.details.forEach(detail => {
+                    output += `${detail}\n`;
+                });
+            }
+
             if (term.byProc) {
                 output += `Terminating Process: ${term.byProc} [${term.byPid || 0}]\n`;
             }
