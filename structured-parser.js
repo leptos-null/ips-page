@@ -16,12 +16,23 @@ class StructuredIPSParser {
                 throw new Error('Invalid IPS file format. Expected at least 2 lines (metadata + report).');
             }
 
+            // thanks to example in
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#the_reviver_parameter
+            const bigIntJsonReviver = (key, value, context) => {
+                // convert all numbers for consistency
+                if (typeof value === 'number') {
+                    // Ignore the value because it has already lost precision
+                    return BigInt(context.source);
+                }
+                return value;
+            }
+
             // Parse metadata (first line)
-            this.metadata = JSON.parse(lines[0]);
+            this.metadata = JSON.parse(lines[0], bigIntJsonReviver);
 
             // Parse crash report (remaining lines)
             const reportLines = lines.slice(1).join('\n');
-            this.report = JSON.parse(reportLines);
+            this.report = JSON.parse(reportLines, bigIntJsonReviver);
 
             // Verify it's a crash report
             if (this.metadata.bug_type !== "309") {
@@ -78,6 +89,13 @@ class StructuredIPSParser {
         // Application Specific Information
         if (this.report.asi) {
             container.appendChild(this.formatASI());
+        }
+
+        // Application Specific Backtraces
+        if (this.report.asiBacktraces && this.report.asiBacktraces.length > 0) {
+            this.report.asiBacktraces.forEach((backtrace, index) => {
+                container.appendChild(this.formatASIBacktrace(backtrace, index));
+            });
         }
 
         // Last Exception Backtrace
@@ -141,8 +159,15 @@ class StructuredIPSParser {
         addRow('Process', procValue);
 
         addRow('Path', this.report.procPath || 'Unknown');
-        addRow('Identifier', bundleInfo.CFBundleIdentifier || 'Unknown');
-        addRow('Version', `${bundleInfo.CFBundleShortVersionString || '?'} (${bundleInfo.CFBundleVersion || '?'})`);
+        addRow('Identifier', bundleInfo.CFBundleIdentifier || this.report.procName || 'Unknown');
+
+        // Version formatting
+        const hasVersion = bundleInfo.CFBundleShortVersionString || bundleInfo.CFBundleVersion;
+        if (hasVersion) {
+            addRow('Version', `${bundleInfo.CFBundleShortVersionString || '?'} (${bundleInfo.CFBundleVersion || '?'})`);
+        } else {
+            addRow('Version', '???');
+        }
 
         if (bundleInfo.DTAppStoreToolsBuild) {
             addRow('AppStoreTools', bundleInfo.DTAppStoreToolsBuild);
@@ -229,10 +254,6 @@ class StructuredIPSParser {
             addRow('Baseband Version', this.report.basebandVersion);
         }
 
-        if (this.report.crashReporterKey) {
-            addRow('Crash Reporter Key', this.report.crashReporterKey);
-        }
-
         if (this.report.bootSessionUUID) {
             addRow('Boot Session UUID', this.report.bootSessionUUID);
         }
@@ -241,8 +262,12 @@ class StructuredIPSParser {
             addRow('Sleep/Wake UUID', this.report.sleepWakeUUID);
         }
 
-        if (storeInfo.deviceIdentifierForVendor) {
+        if (storeInfo.deviceIdentifierForVendor && storeInfo.entitledBeta) {
             addRow('Beta Identifier', storeInfo.deviceIdentifierForVendor);
+        }
+
+        if (this.report.crashReporterKey) {
+            addRow('Crash Reporter Key', this.report.crashReporterKey);
         }
 
         if (this.report.systemID) {
@@ -364,6 +389,18 @@ class StructuredIPSParser {
             exceptionInfo.appendChild(this.createDiv('exception-detail', `Message: ${ex.message}`));
         }
 
+        if (this.report.isSimulated) {
+            exceptionInfo.appendChild(this.createDiv('exception-detail', `Note: SIMULATED (this is NOT a crash)`));
+        }
+
+        if (this.report.isCorpse) {
+            exceptionInfo.appendChild(this.createDiv('exception-detail', `Note: EXC_CORPSE_NOTIFY`));
+        }
+
+        if (this.report.exceptionReason && this.report.exceptionReason.composed_message) {
+            exceptionInfo.appendChild(this.createDiv('exception-detail', `Reason: ${this.report.exceptionReason.composed_message}`));
+        }
+
         if (term) {
             const termDetail = this.createDiv('exception-detail spaced');
             const termFrag = document.createDocumentFragment();
@@ -378,6 +415,20 @@ class StructuredIPSParser {
             }
             termDetail.appendChild(termFrag);
             exceptionInfo.appendChild(termDetail);
+
+            // Termination reasons (detailed error messages)
+            if (term.reasons && term.reasons.length > 0) {
+                term.reasons.forEach(reason => {
+                    exceptionInfo.appendChild(this.createDiv('exception-detail', reason));
+                });
+            }
+
+            // Termination details (e.g., "terminated at launch; ignore backtrace")
+            if (term.details && term.details.length > 0) {
+                term.details.forEach(detail => {
+                    exceptionInfo.appendChild(this.createDiv('exception-detail', detail));
+                });
+            }
 
             if (term.byProc) {
                 const procFrag = document.createDocumentFragment();
@@ -411,9 +462,16 @@ class StructuredIPSParser {
         }
 
         if (this.report.faultingThread !== undefined) {
+            const threads = this.report.threads || [];
+            const faultingThread = threads.find(t => t.triggered);
+            const dispatchQueue = faultingThread?.queue;
+
             const faultDetail = this.createDiv('exception-detail spaced');
             const faultFrag = document.createDocumentFragment();
             faultFrag.append('Faulting Thread: ', this.createNumber(this.report.faultingThread));
+            if (dispatchQueue) {
+                faultFrag.append(', Dispatch Queue: ', dispatchQueue);
+            }
             faultDetail.appendChild(faultFrag);
             exceptionInfo.appendChild(faultDetail);
         }
@@ -450,6 +508,21 @@ class StructuredIPSParser {
         return section;
     }
 
+    formatASIBacktrace(backtrace, index) {
+        const section = this.createDiv('crash-section');
+        const details = this.createElement('details');
+
+        const summary = this.createElement('summary', null, `Application Specific Backtrace ${index}`);
+        details.appendChild(summary);
+
+        const pre = this.createElement('pre', 'asi-backtrace');
+        pre.textContent = backtrace;
+
+        details.appendChild(pre);
+        section.appendChild(details);
+        return section;
+    }
+
     formatLastExceptionBacktrace() {
         const backtrace = this.report.lastExceptionBacktrace;
         if (!backtrace || backtrace.length === 0) return null;
@@ -465,7 +538,7 @@ class StructuredIPSParser {
         backtrace.forEach((frame, index) => {
             const imageInfo = this.report.usedImages[frame.imageIndex];
             const imageName = imageInfo ? imageInfo.name : 'Unknown';
-            const address = (imageInfo?.base || 0) + frame.imageOffset;
+            const address = (imageInfo?.base || 0n) + frame.imageOffset;
 
             const stackFrame = this.createDiv('stack-frame');
             stackFrame.appendChild(this.createDiv('frame-index', String(index)));
@@ -535,7 +608,7 @@ class StructuredIPSParser {
                 thread.frames.forEach((frame, index) => {
                     const imageInfo = this.report.usedImages[frame.imageIndex];
                     const imageName = imageInfo ? imageInfo.name : 'Unknown';
-                    const address = (imageInfo?.base || 0) + frame.imageOffset;
+                    const address = (imageInfo?.base || 0n) + frame.imageOffset;
 
                     const stackFrame = this.createDiv('stack-frame');
                     stackFrame.appendChild(this.createDiv('frame-index', String(index)));
@@ -618,6 +691,15 @@ class StructuredIPSParser {
                         registers.push({ name: displayName, object: state[regName] });
                     }
                 });
+
+                // Rosetta registers (tmp0, tmp1, tmp2)
+                if (state.rosetta) {
+                    ['tmp0', 'tmp1', 'tmp2'].forEach(tmpReg => {
+                        if (state.rosetta[tmpReg]) {
+                            registers.push({ name: tmpReg, object: state.rosetta[tmpReg] });
+                        }
+                    });
+                }
                 break;
 
             default:
@@ -658,10 +740,13 @@ class StructuredIPSParser {
         const container = this.createDiv('section-container');
 
         images.forEach((image) => {
-            if (image.size === 0) return;
-
-            const base = image.base || 0;
-            const end = base + (image.size || 0) - 1;
+            const base = image.base || 0n;
+            let end = base + (image.size || 0n) - 1n;
+            // simulate underflow (matches Apple behavior)
+            if (end < 0n) {
+                const uint64Max = 18446744073709551616n;
+                end += uint64Max;
+            }
 
             const binaryImage = this.createDiv('binary-image');
 
