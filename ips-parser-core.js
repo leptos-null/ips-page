@@ -55,6 +55,19 @@ export class IPSParser {
             output += '\n';
         }
 
+        // Application Specific Backtraces
+        if (this.report.asiBacktraces && this.report.asiBacktraces.length > 0) {
+            this.report.asiBacktraces.forEach((backtrace, index) => {
+                output += '\n';
+                output += `Application Specific Backtrace ${index}:\n`;
+                output += backtrace;
+                if (!backtrace.endsWith('\n')) {
+                    output += '\n';
+                }
+                output += '\n';
+            });
+        }
+
         // Last Exception Backtrace
         if (this.report.lastExceptionBacktrace) {
             output += this.formatLastExceptionBacktrace();
@@ -243,6 +256,10 @@ export class IPSParser {
 
         if (ex.codes !== undefined) {
             output += `Exception Codes:   ${ex.codes}\n`;
+        }
+
+        if (this.report.exceptionReason && this.report.exceptionReason.composed_message) {
+            output += `Exception Reason:  ${this.report.exceptionReason.composed_message}\n`;
         }
 
         if (term) {
