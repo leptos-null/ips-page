@@ -16,12 +16,23 @@ export class IPSParser {
                 throw new Error('Invalid IPS file format. Expected at least 2 lines (metadata + report).');
             }
 
+            // thanks to example in
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#the_reviver_parameter
+            const bigIntJsonReviver = (key, value, context) => {
+                // convert all numbers for consistency
+                if (typeof value === 'number') {
+                    // Ignore the value because it has already lost precision
+                    return BigInt(context.source);
+                }
+                return value;
+            }
+
             // Parse metadata (first line)
-            this.metadata = JSON.parse(lines[0]);
+            this.metadata = JSON.parse(lines[0], bigIntJsonReviver);
 
             // Parse crash report (remaining lines)
             const reportLines = lines.slice(1).join('\n');
-            this.report = JSON.parse(reportLines);
+            this.report = JSON.parse(reportLines, bigIntJsonReviver);
 
             // Verify it's a crash report
             if (this.metadata.bug_type !== "309") {
@@ -317,7 +328,7 @@ export class IPSParser {
             const imageName = imageInfo ? imageInfo.name : 'Unknown';
             const symbol = frame.symbol || `0x${(imageInfo?.base || 0).toString(16)} + ${frame.imageOffset}`;
 
-            const address = ((imageInfo?.base || 0) + frame.imageOffset).toString(16);
+            const address = ((imageInfo?.base || 0n) + frame.imageOffset).toString(16);
             output += index.toString().padEnd(4, ' ');
             output += imageName.padEnd(30, ' ');
             output += '\t';
@@ -367,7 +378,7 @@ export class IPSParser {
                 thread.frames.forEach((frame, index) => {
                     const imageInfo = this.report.usedImages[frame.imageIndex];
                     const imageName = imageInfo?.name || '???';
-                    const address = (imageInfo?.base || 0) + frame.imageOffset;
+                    const address = (imageInfo?.base || 0n) + frame.imageOffset;
                     const symbol = frame.symbol || `0x${(imageInfo?.base || 0).toString(16)} + ${frame.imageOffset}`;
 
                     // Frame number: no padding for single digits, just followed by spaces
@@ -507,8 +518,13 @@ export class IPSParser {
         let output = 'Binary Images:\n';
 
         images.forEach((image) => {
-            const base = image.base || 0;
-            const end = base + (image.size || 0) - 1;
+            const base = image.base || 0n;
+            let end = base + (image.size || 0n) - 1n;
+            // simulate underflow (matches Apple behavior)
+            if (end < 0n) {
+                const uint64Max = 18446744073709551616n;
+                end += uint64Max;
+            }
 
             // Format address range (right-aligned with 0x prefix)
             const baseHex = base.toString(16);
