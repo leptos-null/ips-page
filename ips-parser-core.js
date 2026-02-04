@@ -114,8 +114,15 @@ export class IPSParser {
         let header = '';
         header += `Process:             ${this.report.procName || 'Unknown'} [${this.report.pid || 0}]\n`;
         header += `Path:                ${this.report.procPath || 'Unknown'}\n`;
-        header += `Identifier:          ${bundleInfo.CFBundleIdentifier || 'Unknown'}\n`;
-        header += `Version:             ${bundleInfo.CFBundleShortVersionString || '?'} (${bundleInfo.CFBundleVersion || '?'})\n`;
+        header += `Identifier:          ${bundleInfo.CFBundleIdentifier || this.report.procName || 'Unknown'}\n`;
+
+        // Version formatting
+        const hasVersion = bundleInfo.CFBundleShortVersionString || bundleInfo.CFBundleVersion;
+        if (hasVersion) {
+            header += `Version:             ${bundleInfo.CFBundleShortVersionString || '?'} (${bundleInfo.CFBundleVersion || '?'})\n`;
+        } else {
+            header += `Version:             ???\n`;
+        }
 
         if (bundleInfo.DTAppStoreToolsBuild) {
             header += `AppStoreTools:       ${bundleInfo.DTAppStoreToolsBuild}\n`;
@@ -313,9 +320,11 @@ export class IPSParser {
             const imageName = imageInfo ? imageInfo.name : 'Unknown';
             const symbol = frame.symbol || `0x${(imageInfo?.base || 0).toString(16)} + ${frame.imageOffset}`;
 
-            output += `${index.toString().padStart(2, ' ')}  ${imageName.padEnd(30, ' ')}\t`;
-            output += `0x${((imageInfo?.base || 0) + frame.imageOffset).toString(16).padStart(16, '0')} `;
-            output += `${symbol}`;
+            const address = ((imageInfo?.base || 0) + frame.imageOffset).toString(16);
+            output += index.toString().padEnd(4, ' ');
+            output += imageName.padEnd(30, ' ');
+            output += '\t';
+            output += `       0x${address} ${symbol}`;
 
             if (frame.symbolLocation !== undefined) {
                 output += ` + ${frame.symbolLocation}`;
@@ -331,23 +340,28 @@ export class IPSParser {
         const threads = this.report.threads || [];
         let output = '\n';
 
-        threads.forEach((thread) => {
-            const threadNum = thread.id;
+        threads.forEach((thread, threadIndex) => {
             const isCrashed = thread.triggered;
 
-            // Thread header
-            output += `Thread ${threadNum}`;
-            if (thread.name) {
-                output += ` name:  ${thread.name}`;
-            }
+            // Thread header - use array index, not thread.id
+            output += `Thread ${threadIndex}`;
+
+            // Format based on what info is present
             if (isCrashed) {
                 output += ' Crashed';
             }
+
+            // Add :: if we have queue or name
+            if (thread.queue || thread.name) {
+                output += ':';
+            }
             output += ':';
 
-            // Add dispatch queue if present
-            if (thread.queue) {
-                output += `:  Dispatch queue: ${thread.queue}`;
+            // Add name or queue
+            if (thread.name) {
+                output += ` ${thread.name}`;
+            } else if (thread.queue) {
+                output += `  Dispatch queue: ${thread.queue}`;
             }
             output += '\n';
 
@@ -359,9 +373,15 @@ export class IPSParser {
                     const address = (imageInfo?.base || 0) + frame.imageOffset;
                     const symbol = frame.symbol || `0x${(imageInfo?.base || 0).toString(16)} + ${frame.imageOffset}`;
 
-                    output += `${index.toString().padStart(2, ' ')}  ${imageName.padEnd(30, ' ')}\t`;
-                    output += `0x${address.toString(16).padStart(16, '0')} `;
-                    output += `${symbol}`;
+                    // Frame number: no padding for single digits, just followed by spaces
+                    const frameNum = index.toString();
+                    output += `${frameNum}   `.slice(0, 4); // ensures 1-3 chars for number + spaces = 4 total
+                    output += imageName.padEnd(30, ' ');
+                    output += '\t';
+
+                    // Address: right-aligned with leading spaces (not zeros)
+                    const hexAddr = `0x${address.toString(16)}`;
+                    output += `${hexAddr.padStart(18, ' ')} ${symbol}`;
 
                     if (frame.symbolLocation !== undefined) {
                         output += ` + ${frame.symbolLocation}`;
@@ -481,19 +501,25 @@ export class IPSParser {
         let output = '\nBinary Images:\n';
 
         images.forEach((image) => {
-            if (image.size === 0) {
-                // Skip placeholder entries
-                return;
-            }
-
             const base = image.base || 0;
             const end = base + (image.size || 0) - 1;
 
-            output += `       0x${base.toString(16)} - `;
-            output += `       0x${end.toString(16)}`;
-            output += ` ${(image.name || '???').padEnd(30, ' ')}`;
-            output += ` ${image.arch || 'unknown-arch'} `;
-            output += ` <${(image.uuid || '').replace(/-/g, '')}>`;
+            // Format address range (right-aligned with 0x prefix)
+            const baseHex = base.toString(16);
+            const endHex = end.toString(16);
+            output += ('0x' + baseHex).padStart(18, ' ');
+            output += ' - ';
+            output += ('0x' + endHex).padStart(18, ' ');
+
+            // Name with optional bundle identifier and version
+            const bundleName = image.CFBundleIdentifier || image.name || '???';
+            const version = image.CFBundleShortVersionString || '*';
+            output += ` ${bundleName} (${version})`;
+
+            // UUID with dashes preserved
+            output += ` <${image.uuid || '00000000-0000-0000-0000-000000000000'}>`;
+
+            // Path
             output += ` ${image.path || '???'}\n`;
         });
 
