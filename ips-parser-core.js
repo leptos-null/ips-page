@@ -250,7 +250,15 @@ export class IPSParser {
         }
 
         if (this.report.faultingThread !== undefined) {
-            header += `Triggered by Thread: ${this.report.faultingThread}\n`;
+            const threads = this.report.threads || [];
+            const faultingThread = threads.find(t => t.triggered);
+            const dispatchQueue = faultingThread?.queue;
+
+            header += `Triggered by Thread: ${this.report.faultingThread}`;
+            if (dispatchQueue) {
+                header += `, Dispatch Queue: ${dispatchQueue}`;
+            }
+            header += '\n';
         }
 
         return header;
