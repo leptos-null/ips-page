@@ -451,6 +451,15 @@ export class IPSParser {
                     }
                 });
 
+                // Rosetta registers (tmp0, tmp1, tmp2)
+                if (state.rosetta) {
+                    ['tmp0', 'tmp1', 'tmp2'].forEach(tmpReg => {
+                        if (state.rosetta[tmpReg]) {
+                            registers.push({ name: tmpReg, object: state.rosetta[tmpReg] });
+                        }
+                    });
+                }
+
                 // Additional x86 fields
                 if (state.cpu !== undefined) {
                     additionalInfo += `\nLogical CPU:     ${state.cpu.value}\n`;
