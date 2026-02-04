@@ -71,10 +71,10 @@ export class IPSParser {
         // Last Exception Backtrace
         if (this.report.lastExceptionBacktrace) {
             output += this.formatLastExceptionBacktrace();
-            output += '\n';
         }
 
         // Threads
+        output += '\n';
         output += this.formatThreads();
         output += '\n';
 
@@ -92,7 +92,6 @@ export class IPSParser {
         if (this.report.vmSummary) {
             output += 'VM Region Summary:\n';
             output += this.report.vmSummary;
-            output += '\n';
         }
 
         // Filtered Log
@@ -250,7 +249,7 @@ export class IPSParser {
         const ex = this.report.exception || {};
         const term = this.report.termination;
 
-        let output = '\n';
+        let output = '';
         output += `Exception Type:    ${ex.type || 'Unknown'}`;
         if (ex.signal) {
             output += ` (${ex.signal})`;
@@ -292,8 +291,7 @@ export class IPSParser {
     }
 
     formatASI() {
-        let output = '\n';
-        output += 'Application Specific Information:\n';
+        let output = 'Application Specific Information:\n';
 
         for (const [key, value] of Object.entries(this.report.asi)) {
             if (Array.isArray(value)) {
@@ -312,8 +310,7 @@ export class IPSParser {
         const backtrace = this.report.lastExceptionBacktrace;
         if (!backtrace || backtrace.length === 0) return '';
 
-        let output = '\n';
-        output += 'Last Exception Backtrace:\n';
+        let output = 'Last Exception Backtrace:\n';
 
         backtrace.forEach((frame, index) => {
             const imageInfo = this.report.usedImages[frame.imageIndex];
@@ -338,7 +335,7 @@ export class IPSParser {
 
     formatThreads() {
         const threads = this.report.threads || [];
-        let output = '\n';
+        let output = '';
 
         threads.forEach((thread, threadIndex) => {
             const isCrashed = thread.triggered;
@@ -507,7 +504,7 @@ export class IPSParser {
 
     formatBinaryImages() {
         const images = this.report.usedImages || [];
-        let output = '\nBinary Images:\n';
+        let output = 'Binary Images:\n';
 
         images.forEach((image) => {
             const base = image.base || 0;
@@ -539,7 +536,7 @@ export class IPSParser {
         const extMods = this.report.extMods;
         if (!extMods) return '';
 
-        let output = '\nExternal Modification Summary:\n';
+        let output = 'External Modification Summary:\n';
 
         // Calls made by other processes targeting this process
         if (extMods.targeted) {
