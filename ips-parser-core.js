@@ -201,7 +201,7 @@ export class IPSParser {
 
         header += `\n`;
 
-        if (storeInfo.deviceIdentifierForVendor) {
+        if (storeInfo.deviceIdentifierForVendor && storeInfo.entitledBeta) {
             header += `Beta Identifier:     ${storeInfo.deviceIdentifierForVendor}\n`;
         }
 
