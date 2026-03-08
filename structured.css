@@ -285,21 +285,7 @@
     margin-top: 15px;
 }
 
-/* VM Summary */
-.vm-summary {
-    font-family: var(--code-font-family);
-    font-size: 12px;
-    padding: 15px;
-    border-radius: 6px;
-    margin-top: 15px;
-    white-space: pre-wrap;
-    overflow-x: auto;
-    background-color: var(--bg-code);
-    border: 1px solid var(--border);
-    color: var(--text-primary);
-}
-
-/* Filtered Log */
+.vm-summary,
 .filtered-log {
     font-family: var(--code-font-family);
     font-size: 12px;
