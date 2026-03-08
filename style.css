@@ -7,15 +7,35 @@
 :root {
     color-scheme: light dark;
     --code-font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+
+    --bg-primary: #f2f2f7;
+    --bg-secondary: #ffffff;
+    --bg-code: #f8f8fa;
+
+    --text-primary: #000000;
+    --text-secondary: #636366;
+
+    --accent: #007aff;
+    --accent-hover: #0062cc;
+
+    --danger: #ff3b30;
+    --danger-bg: rgba(255, 59, 48, 0.08);
+    --danger-border: rgba(255, 59, 48, 0.3);
+
+    --address-color: #7c3aed;
+
+    --border: rgba(60, 60, 67, 0.12);
+
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     line-height: 1.6;
-    color: #333;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 20px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .container {
@@ -24,7 +44,6 @@ body {
 
 header {
     text-align: center;
-    color: white;
     margin-bottom: 30px;
 }
 
@@ -36,15 +55,16 @@ header h1 {
 
 header p {
     font-size: 1.1rem;
-    opacity: 0.9;
+    color: var(--text-secondary);
 }
 
 .input-section {
-    background: white;
     border-radius: 12px;
     padding: 25px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     margin-bottom: 20px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
 }
 
 #ipsInput {
@@ -53,15 +73,21 @@ header p {
     padding: 15px;
     font-family: var(--code-font-family);
     font-size: 13px;
-    border: 2px solid #e0e0e0;
     border-radius: 8px;
     resize: vertical;
-    transition: border-color 0.3s;
+    transition: border-color 0.2s;
+    background-color: var(--bg-code);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
 }
 
 #ipsInput:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--accent);
+}
+
+#ipsInput::placeholder {
+    color: var(--text-secondary);
 }
 
 .button-group {
@@ -77,45 +103,45 @@ button {
     font-size: 1rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.2s;
 }
 
 .btn-primary {
-    background: #667eea;
-    color: white;
     flex: 1;
+    background-color: var(--accent);
+    color: #ffffff;
 }
 
 .btn-primary:hover {
-    background: #5568d3;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    background-color: var(--accent-hover);
+    transform: translateY(-1px);
 }
 
 .btn-secondary {
-    background: #e0e0e0;
-    color: #333;
+    background-color: rgba(60, 60, 67, 0.08);
+    color: var(--text-primary);
 }
 
 .btn-secondary:hover {
-    background: #d0d0d0;
+    background-color: rgba(60, 60, 67, 0.15);
 }
 
 .error-message {
-    background: #fee;
-    border: 2px solid #fcc;
-    color: #c33;
     padding: 15px;
     border-radius: 8px;
     margin-bottom: 20px;
     font-weight: 500;
+    background-color: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid var(--danger-border);
 }
 
 .output-section {
-    background: white;
     border-radius: 12px;
     padding: 25px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
 }
 
 .output-header {
@@ -124,25 +150,25 @@ button {
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 15px;
-    border-bottom: 2px solid #e0e0e0;
+    border-bottom: 1px solid var(--border);
 }
 
 .output-header h2 {
     font-size: 1.5rem;
-    color: #667eea;
 }
 
 #reportOutput {
     font-family: var(--code-font-family);
     font-size: 13px;
     line-height: 1.5;
-    background: #f8f9fa;
     padding: 20px;
     border-radius: 8px;
     overflow-x: auto;
     white-space: pre-wrap;
     word-wrap: break-word;
-    color: #2d3748;
+    background-color: var(--bg-code);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
 }
 
 @media (max-width: 768px) {
@@ -162,56 +188,33 @@ button {
 }
 
 @media (prefers-color-scheme: dark) {
-    body {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        color: #e0e0e0;
-    }
+    :root {
+        --bg-primary: #000000;
+        --bg-secondary: #1c1c1e;
+        --bg-code: #2c2c2e;
 
-    .input-section,
-    .output-section {
-        background: #1e1e1e;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    }
+        --text-primary: #ffffff;
+        --text-secondary: #8e8e93;
 
-    #ipsInput {
-        background: #2a2a2a;
-        border-color: #404040;
-        color: #e0e0e0;
-    }
+        --accent: #0a84ff;
+        --accent-hover: #409cff;
 
-    #ipsInput:focus {
-        border-color: #667eea;
-    }
+        --danger: #ff453a;
+        --danger-bg: rgba(255, 69, 58, 0.12);
+        --danger-border: rgba(255, 69, 58, 0.35);
 
-    #ipsInput::placeholder {
-        color: #808080;
+        --address-color: #a78bfa;
+
+        --border: rgba(255, 255, 255, 0.1);
+
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     .btn-secondary {
-        background: #404040;
-        color: #e0e0e0;
+        background-color: rgba(255, 255, 255, 0.1);
     }
 
     .btn-secondary:hover {
-        background: #505050;
-    }
-
-    .error-message {
-        background: #3a1616;
-        border-color: #5a2020;
-        color: #ff6b6b;
-    }
-
-    .output-header {
-        border-bottom-color: #404040;
-    }
-
-    .output-header h2 {
-        color: #8b9df7;
-    }
-
-    #reportOutput {
-        background: #2a2a2a;
-        color: #e0e0e0;
+        background-color: rgba(255, 255, 255, 0.16);
     }
 }

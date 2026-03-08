@@ -1,15 +1,16 @@
 /* Structured view specific styles */
 
-:root {
-    --code-font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+/* assumes `style.css` is imported first */
+
+#reportOutput {
+    padding: 0;
+    border-radius: 0;
+    background-color: unset;
+    border: none;
 }
 
 .structured-output {
     max-width: none;
-}
-
-.structured-output .button-group {
-    gap: 10px;
 }
 
 /* Section styles */
@@ -18,21 +19,22 @@
 }
 
 .crash-section > details {
-    background: #f8f9fa;
-    border: 1px solid #e0e0e0;
     border-radius: 8px;
     padding: 15px;
     margin-bottom: 10px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
 }
 
 .crash-section > details > summary {
     cursor: pointer;
     font-weight: 600;
     font-size: 1.1rem;
-    color: #667eea;
     padding: 5px 0;
     user-select: none;
     list-style: none;
+    color: var(--text-primary);
 }
 
 .crash-section > details > summary::-webkit-details-marker {
@@ -55,14 +57,11 @@
     display: inline-block;
     margin-right: 8px;
     transition: transform 0.2s;
+    color: var(--accent);
 }
 
 .crash-section > details[open] > summary::before {
     transform: rotate(90deg);
-}
-
-.crash-section > details[open] {
-    background: #ffffff;
 }
 
 /* Thread item details */
@@ -71,6 +70,8 @@
     display: inline-block;
     margin-right: 8px;
     transition: transform 0.2s;
+    color: var(--text-secondary);
+    font-size: 0.75em;
 }
 
 .thread-item details[open] summary::before {
@@ -89,13 +90,13 @@
 
 .info-label {
     font-weight: 600;
-    color: #555;
     white-space: nowrap;
+    color: var(--text-secondary);
 }
 
 .info-value {
-    color: #2d3748;
     word-break: break-all;
+    color: var(--text-primary);
 }
 
 /* Thread list */
@@ -104,17 +105,16 @@
 }
 
 .thread-item {
-    background: #f8f9fa;
-    border: 1px solid #e0e0e0;
     border-radius: 6px;
     padding: 12px;
     margin-bottom: 8px;
+    background-color: var(--bg-code);
+    border: 1px solid var(--border);
 }
 
 .thread-item.crashed {
-    border-color: #ff6b6b;
-    border-width: 2px;
-    background: #fff5f5;
+    background-color: #fff2f1;
+    border-color: rgba(255, 59, 48, 0.35);
 }
 
 .thread-header {
@@ -124,7 +124,7 @@
 }
 
 .thread-item.crashed .thread-header {
-    color: #c92a2a;
+    color: var(--danger);
 }
 
 /* Stack frames */
@@ -139,7 +139,7 @@
 }
 
 .frame-index {
-    color: #888;
+    color: var(--text-secondary);
     text-align: right;
 }
 
@@ -154,7 +154,7 @@
 
 /* Syntax highlighting */
 .addr {
-    color: #7c3aed;
+    color: var(--address-color);
     font-weight: 500;
 }
 
@@ -163,11 +163,11 @@
 }
 
 .offset {
-    color: #888;
+    color: var(--text-secondary);
 }
 
 .number {
-    color: #d97706;
+    color: #ea580c;
 }
 
 /* Register display */
@@ -187,18 +187,18 @@
 
 .register-name {
     font-weight: 600;
-    color: #555;
     min-width: 50px;
+    color: var(--text-secondary);
 }
 
 .register-value {
-    color: #7c3aed;
+    color: var(--address-color); /* not all register values are addresses, but probably some of them are */
     font-weight: 500;
 }
 
 .register-desc {
-    color: #888;
     font-style: italic;
+    color: var(--text-secondary);
 }
 
 /* Binary images */
@@ -213,7 +213,7 @@
 }
 
 .image-range {
-    color: #7c3aed;
+    color: var(--address-color);
     font-weight: 500;
 }
 
@@ -223,7 +223,7 @@
 }
 
 .image-details {
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .image-arch {
@@ -232,7 +232,7 @@
 }
 
 .image-uuid {
-    color: #888;
+    color: #888888;
     font-family: inherit;
 }
 
@@ -242,25 +242,25 @@
 
 /* Exception info */
 .exception-info {
-    background: #fff5f5;
-    border-left: 4px solid #ff6b6b;
     padding: 15px;
     margin-top: 15px;
-    border-radius: 4px;
+    border-radius: 6px;
+    background-color: var(--danger-bg);
+    border: 1px solid var(--danger-border);
 }
 
 .exception-type {
     font-weight: 700;
-    color: #c92a2a;
     font-size: 1.1rem;
     margin-bottom: 8px;
+    color: var(--danger);
 }
 
 .exception-detail {
     font-family: var(--code-font-family);
     font-size: 13px;
-    color: #2d3748;
     margin: 4px 0;
+    color: var(--text-primary);
 }
 
 .exception-detail.spaced {
@@ -273,7 +273,8 @@
 
 .thread-state-header {
     margin-bottom: 10px;
-    color: #555;
+    color: var(--text-secondary);
+    font-weight: 600;
 }
 
 .frames-container {
@@ -288,65 +289,34 @@
 .vm-summary {
     font-family: var(--code-font-family);
     font-size: 12px;
-    background: #f8f9fa;
     padding: 15px;
     border-radius: 6px;
     margin-top: 15px;
     white-space: pre-wrap;
     overflow-x: auto;
+    background-color: var(--bg-code);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
 }
 
 /* Filtered Log */
 .filtered-log {
     font-family: var(--code-font-family);
     font-size: 12px;
-    background: #f8f9fa;
     padding: 15px;
     border-radius: 6px;
     margin-top: 15px;
     white-space: pre-wrap;
     overflow-x: auto;
+    background-color: var(--bg-code);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
 }
 
-/* Dark mode */
 @media (prefers-color-scheme: dark) {
-    .crash-section > details {
-        background: #2a2a2a;
-        border-color: #404040;
-    }
-
-    .crash-section > details[open] {
-        background: #1e1e1e;
-    }
-
-    .crash-section > details > summary {
-        color: #8b9df7;
-    }
-
-    .info-label {
-        color: #a0a0a0;
-    }
-
-    .info-value {
-        color: #e0e0e0;
-    }
-
-    .thread-item {
-        background: #2a2a2a;
-        border-color: #404040;
-    }
-
     .thread-item.crashed {
-        background: #2d1a1a;
-        border-color: #ff6b6b;
-    }
-
-    .thread-item.crashed .thread-header {
-        color: #ff8787;
-    }
-
-    .frame-index {
-        color: #808080;
+        background-color: #2c1516;
+        border-color: rgba(255, 69, 58, 0.4);
     }
 
     .frame-image {
@@ -357,32 +327,16 @@
         color: #e0e0e0;
     }
 
-    .addr {
-        color: #a78bfa;
-    }
-
     .symbol {
         color: #34d399;
     }
 
-    .register-name {
-        color: #a0a0a0;
-    }
-
-    .register-value {
-        color: #a78bfa;
-    }
-
-    .image-range {
-        color: #a78bfa;
+    .number {
+        color: #fb923c;
     }
 
     .image-name {
         color: #6ba3ff;
-    }
-
-    .image-details {
-        color: #999;
     }
 
     .image-arch {
@@ -390,38 +344,11 @@
     }
 
     .image-uuid {
-        color: #888;
+        color: #adadad;
     }
 
     .image-path {
         color: #34d399;
-    }
-
-    .exception-info {
-        background: #2d1a1a;
-        border-color: #ff6b6b;
-    }
-
-    .exception-type {
-        color: #ff8787;
-    }
-
-    .exception-detail {
-        color: #e0e0e0;
-    }
-
-    .thread-state-header {
-        color: #a0a0a0;
-    }
-
-    .vm-summary {
-        background: #2a2a2a;
-        color: #e0e0e0;
-    }
-
-    .filtered-log {
-        background: #2a2a2a;
-        color: #e0e0e0;
     }
 }
 
